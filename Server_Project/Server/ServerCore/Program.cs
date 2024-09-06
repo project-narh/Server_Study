@@ -4,51 +4,58 @@ namespace ServerCore
 {
     class Program
     {
-        volatile static bool _stop = false; // 모든 쓰레드가 동시 접근 가능 Static 이니까
-        //static bool _stop = false;
-        static void ThreadMain()
-        {
-            Console.WriteLine("쓰레드 시작");
-
-            while (!_stop)
-            {
-                
-            }
-            /*디버그 > 창 > 디스어셈블리 
-             * 이를 어셈블리로 확인하면
-
-            if(_stop == false)
-            {
-                while(true)
-                {
-
-                }
-            }
-            이러한 형태로 되어있다
-            컴파일 과정에서 반복문 내부에 _stop을 바꾸는 명령어가 없어서 맘대로 이렇게 수정한 것(멀티쓰레드 개념을 컴파일러가 모르기에)
-            이를 최적화 하지 않게 하는 방법은 앞에 volatile를 붙여준다 : volatile static bool _stop = false; (c++에서는 의미가 다르다 캐시를 무시하고 최신 값을 가져와라 라는 뜻도 있음)
-            c# 전문가들은 쓰지 말라고 하는 방법이니 이런애가 있구나 정도로만 알고 넘어가자
-             */
-
-            Console.WriteLine("쓰레드 종료");
-        }
-
         static void Main(string[] args)
         {
-            Task t = new Task(ThreadMain);
-            t.Start();
+            /*
+             * 레스토랑에서 주문을 받고 이를 주문 현황판에 기입하면 요리가 시작된다.
+            그렇지만 하나 받고 기입하고 하나 받고 기입하면 너무 이동에 시간이 많이 소요된다.
+            그렇기에 최대한 많이 받고 모아서 한번에 기입하는 방법(단기 기억을 쓰는데 좀 많으면 수첩에 작성해서)
+            이렇게 하면 주문을 번복할때 아직 주문이 들어간게 아닌 상태라면 기존 주문을 지우고 새로운걸 넣으면 된다
+            다만 직원이 여러명이라면 문제가 생긴다 이 수첩은 개인마다 가지고 있는 것이기 때문에 (현황판에도 없고 본인은 주문을 안받았다면 혼란이 오게 된다)
+            이런 일이 컴퓨터에서도 일어나고 있다
 
-            Thread.Sleep(1000);// 1초동안 쓰레드 sleep
-            _stop = true;
-            Console.WriteLine("STOP 호출");
-            Console.WriteLine("종료 대기중");
-            t.Wait();//Thread의 join과 동일 쓰레드가 종료되길 기다리는 함수
-            Console.WriteLine("종료 성공");
+            코어를 확대하면 ALU(연산), 캐시 장치가 존재한다
+            이를 메모리와 데이터를 공유한다
 
-            //평소에는 Debug 모드지만 배포에는 Release를 사용한다(최적화가 자동 진행) 이를 사용하니 위 함수가 무한루프에 빠지게 된다
-            // 멀티 쓰레드를 사용하면 이런 상황이 많이 사용된다 멀티쓰레드는 흑마법
-            // 디버그 > 창 > 디스어셈블리
+            단기 기억 = 레지스터
+            작은 수첩 = L1 캐시
+            큰 수첩 = L2 캐시
+            데이터가 쌓이면 메인 메모리인 RAM에 올리는 과정을 비유로 풀었다
 
+            캐시가 사용되는건 뭘 하지 않더라도 내부적으로 작동중
+            캐시의 철학은 1. TEMPORAL LOCALITY : 시간관점으로 가장 최근 변수가 재사용될 확률이 높다(방금 주문 테이블에서 추가 주문이 나올 확률이 높다)
+            2. SPACIAL LOCALITY : 공간적 관적으로 보면 방금 접근한 변수와 인접한 변수가 반문될 것 같다는 철학 (처음 주문한 사람의 주변에서 주문할 확률이 높다)
+
+            멀티쓰레드 환경이라면 문제가 생긴다 (서로 가지고 있는 데이터가 달라서)
+            어떤 식으로든 정보를 업데이트 하고 다른 쓰레드에서 사용해야 한다
+             */
+
+            int[,] arr = new int[10000, 10000];
+
+            {
+                long now = DateTime.Now.Ticks;
+                for(int y = 0; y < 10000; y++)
+                    for(int x = 0; x < 10000; x++)
+                        arr[y, x] = 1;
+                long end = DateTime.Now.Ticks;
+                Console.WriteLine($"(y,x) 순서 걸린 시간 {end - now}");
+            }
+
+            {
+                long now = DateTime.Now.Ticks;
+                for (int y = 0; y < 10000; y++)
+                    for (int x = 0; x < 10000; x++)
+                        arr[x, y] = 1;
+                long end = DateTime.Now.Ticks;
+                Console.WriteLine($"(y,x) 순서 걸린 시간 {end - now}");
+            }
+            //상식적으로 보면 두개가 같은 시간이 나와야 한다
+            //그렇지만 차이가 엄청 많이 난다
+            //공간적으로 인접한 접근 이야기가 위에 나왔었다.
+            /*
+             위는 순차적으로 접근하기에 캐시에 넣어두고 작업
+            아래는 바로 옆에 있는게 아니라 뛰엄 뛰엄 접근하기에 공간적 이점을 살릴 수 없어 캐시에 없는 배열에 접근하여 활용할 수 없는 코드가 되었다
+             */
         }
     }
 
