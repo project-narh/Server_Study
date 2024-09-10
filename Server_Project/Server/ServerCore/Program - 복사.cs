@@ -2,74 +2,84 @@
 
 namespace ServerCore
 {
+    /*같은 변수를 다른 쓰레드에서 사용한다면 이걸 가져올때 문제가 된다는것을 저번에 확인했다
+     크리티컬 섹션 - 인계영역
+    이거를 해결하기 위한 방법으로 interlock을 걸었던것
+    다만 이번에는 이를 사용하지 않고 선을 그어서 내가 쓸꺼니까 지금 다들 이 변수 쓰지마 하는 방법을 사용할 것
+
+    Monitor은 문을 락거는 행위
+    화장실을 갈때 누가 안에서 문을 잠그면 못들어간다 
+
+    다시 문이 열릴때까지 대기한다
+    상호배제 Mutual Exclusive
+    이 enter와 exit 사이는 싱글 쓰레드라고 생각하고 작성해도 무관하다
+    언어마다 이런건 있다
+    c++은 CriticalSection std::mutex
+    다만 이렇게 사용하면 관리하기가 어려워지고 
+    exit를 안하고 return을 하게 된다면 또 문제가 발생된다 이런 상황을 데드락 상황이라고 한다 DeadLock
+    일반적으로 사용하고 싶으면 try 문법을 사용해서 finally를 사용
+    try
+                    {
+                        Monitor.Enter(_obj);
+                        number++;
+                        return;
+                    }
+                    finally { Monitor.Exit(_obj); }
+    이런식으로 하면 무조건 exit가 실행된다.
+    대부분은 lock 키워드를 사용 이는 위 try와 똑같은 역할 이를 편리하게 사용할 수 있음
+     */
     class Program
-    {/*
-      가시성 문제는 아니고 이렇게 하면 0이 나와야 하는거 아닌가 왜 값이 다르지? 사실 난 지금 0이 나오는 중이긴 함
-        
-        Race Condition : 경합 조건에 대한 이야기다
-        식당이 잘되서 신입 직원 3명을 채용 주문 생기면 바로 처리하려고 다 대기중인 상태
-        보자마자 직원 3명이 바로 처리해서 3개가 배달옴 (하지만 1개만 시킴 이런 상황을 레이스 컨디션 즉 경합 조건이라고 말한다)
-        동시 다발적으로 일이 발생
-
-        어셈블리는 오른쪽에서 왼쪽으로 읽으면 된다
-        number++을 어셈블리로 보면
-        메모리값을 ecx로 옮기고 1을 더하고 다시 기존 메모리값으로 옮긴다
-        즉
-        number++;는
-        int temp = number;
-        temp += 1;
-        number = temp; 와 동일하다
-        이래서 문제가 되는거다
-        number이 tmep에 저장되고 다시 돌려받는 과정에서 이것마저 값을 공유하는게 아니라서
-        위에서 number = temp(1) 과정에서 아래는 temp -= 1 또는 number = temp(-1) 이 이뤄지고 있고
-        그로인하여 오차가 발생
-
-        atomic = 원자성 이는 DB에서도 나오는 문제
-        상점에서 아이템을 구매할때 골드를 빼주고 인벤에 아이템을 추가 하면서 DB에 저장하는데 
-        골ㄷ를 빼고 서버가 다운이 된다면 골드만 빠지고 아이템은 안 생기는 문제 발생
-        아이템 교환에서도
-        전달되는 과정에서 이와 같은 문제가 발생하여 아이템 복사가 일어날 수 있다.
-
-        이럴땐 Interlocked를 사용한다 이는 원자적으로 이뤄지는걸 보장 (더이상 쪼갤 수 없는)
-        다만 성능에서 문제가 발생되긴 한다.
-        number++로 3번의 작업이 아닌 한번만 이뤄진다
-        */
+    {
         static int number = 0;
+        static object _obj = new object();
         static void Thread_1()
         {
             for (int i = 0; i < 10000000; i++)
             {
-                //number++;
-                Interlocked.Increment(ref number);
-                /*
-                number++;
-                는
-                int temp = number;
-                temp += 1;
-                number = temp; 와 동일하다
-                */
-            }
-        }
 
-        static void Thread_2()
-        {
-            for (int i = 0; i < 10000000; i++)
+                /*               Monitor.Enter(_obj); // 문을 잠그는 행위
+                               number++;
+                               Monitor.Exit(_obj); // 작업이 끝나서 문을 다시 열었다면*/
+                /*try
+                {
+                    Monitor.Enter(_obj);
+                    number++;
+                    return;
+                }
+                finally { Monitor.Exit(_obj); }*/
+                lock (_obj)
+                {
+                    //이때 obj가 자물쇠의 역할을 새준다고 생각하면 된다 이를 빠져나올때 잠금을 풀어주는거
+                    number++;
+                }
+            }
+
+            static void Thread_2()
             {
-                //number--;
-                Interlocked.Decrement(ref number);
+                for (int i = 0; i < 10000000; i++)
+                {
+                    /*Monitor.Enter(_obj); // 문이 잠겨있으니 대기 > 문이 열렸다면 이제 들어가서 문을 잠군다
+                    number--;
+                    Monitor.Exit(_obj);*/
+                    lock (_obj)
+                    {
+                        //이때 obj가 자물쇠의 역할을 새준다고 생각하면 된다 이를 빠져나올때 잠금을 풀어주는거
+                        number--;
+                    }
+                }
+            }
+
+            static void Main(string[] args)
+            {
+
+                Task t1 = new Task(Thread_1);
+                Task t2 = new Task(Thread_2);
+                t1.Start();
+                t2.Start();
+
+                Console.WriteLine(number);
             }
         }
 
-        static void Main(string[] args)
-        {
-
-            Task t1 = new Task(Thread_1);
-            Task t2 = new Task(Thread_2);
-            t1.Start();
-            t2.Start();
-
-            Console.WriteLine(number);
-        }
     }
-
 }
