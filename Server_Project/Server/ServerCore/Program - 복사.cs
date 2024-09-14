@@ -2,84 +2,95 @@
 
 namespace ServerCore
 {
-    /*같은 변수를 다른 쓰레드에서 사용한다면 이걸 가져올때 문제가 된다는것을 저번에 확인했다
-     크리티컬 섹션 - 인계영역
-    이거를 해결하기 위한 방법으로 interlock을 걸었던것
-    다만 이번에는 이를 사용하지 않고 선을 그어서 내가 쓸꺼니까 지금 다들 이 변수 쓰지마 하는 방법을 사용할 것
+    class SessionManager
+    {
+        static object _lock = new object();
+        public static void TestSession()
+        { 
+            lock(_lock)
+            {
 
-    Monitor은 문을 락거는 행위
-    화장실을 갈때 누가 안에서 문을 잠그면 못들어간다 
+            }
+        }
 
-    다시 문이 열릴때까지 대기한다
-    상호배제 Mutual Exclusive
-    이 enter와 exit 사이는 싱글 쓰레드라고 생각하고 작성해도 무관하다
-    언어마다 이런건 있다
-    c++은 CriticalSection std::mutex
-    다만 이렇게 사용하면 관리하기가 어려워지고 
-    exit를 안하고 return을 하게 된다면 또 문제가 발생된다 이런 상황을 데드락 상황이라고 한다 DeadLock
-    일반적으로 사용하고 싶으면 try 문법을 사용해서 finally를 사용
-    try
-                    {
-                        Monitor.Enter(_obj);
-                        number++;
-                        return;
-                    }
-                    finally { Monitor.Exit(_obj); }
-    이런식으로 하면 무조건 exit가 실행된다.
-    대부분은 lock 키워드를 사용 이는 위 try와 똑같은 역할 이를 편리하게 사용할 수 있음
-     */
+        public static void Test()
+        {
+            lock(_lock)
+            {
+                UserManager.TestUser();
+            }
+        }
+    }
+
+    class UserManager
+    {
+    static object _lock = new object ();
+        public static void Test()
+        {
+            lock(_lock)
+            {
+                SessionManager.TestSession();
+            }
+        }
+
+        public static void TestUser()
+        {
+            lock(_lock)
+            {
+
+            }
+        }
+    }
+    
+
     class Program
     {
-        static int number = 0;
-        static object _obj = new object();
+        /*락이 걸려 접근을 못하는 경우는 코드를 잘못짠거
+        고차원적인 데드락이 많다
+        자물쇠가 2개가 있고 둘다 잠궈야지 화장실에 들어갈 수 있다고 가정하는데
+
+        쓰레드 2개가 각각 한개씩 접근을 했을때
+        그러면 두개를 동시에 접근하는 경우는 없을꺼다
+        자물쇠를 먼저 접근한거 부터 잠그고 다른 자물쇠를 잠궈서 문을 완전이 잠그고 싶은데
+        다른 자물쇠는 이미 다른 쓰레드가 접근중이다.
+        이는 다른 쓰레드도 마찬가지인 상황이라 계속 잠글 수 없는 상황이 발생
+
+        이를 해결하는 방법은 무조건 위쪽부터 잠그고 다음에 다음 자물쇠까지 잠그자는 약속을 넣는다
+
+        하지만 이상하다 화장실은 한개인데 자물쇠는 2개라는 비유는 이상하지만 코드내에서는 발생 가능성 있다
+        
+        이는 Monitor로 해결
+        Monitor에는 TryEnter라는게 존재 락을 얻는데 실패하면 나간다 이런 방법이 있지만 애초에 그러면 락에 문제가 있다는 것
+        */
+
         static void Thread_1()
         {
             for (int i = 0; i < 10000000; i++)
             {
-
-                /*               Monitor.Enter(_obj); // 문을 잠그는 행위
-                               number++;
-                               Monitor.Exit(_obj); // 작업이 끝나서 문을 다시 열었다면*/
-                /*try
-                {
-                    Monitor.Enter(_obj);
-                    number++;
-                    return;
-                }
-                finally { Monitor.Exit(_obj); }*/
-                lock (_obj)
-                {
-                    //이때 obj가 자물쇠의 역할을 새준다고 생각하면 된다 이를 빠져나올때 잠금을 풀어주는거
-                    number++;
-                }
-            }
-
-            static void Thread_2()
-            {
-                for (int i = 0; i < 10000000; i++)
-                {
-                    /*Monitor.Enter(_obj); // 문이 잠겨있으니 대기 > 문이 열렸다면 이제 들어가서 문을 잠군다
-                    number--;
-                    Monitor.Exit(_obj);*/
-                    lock (_obj)
-                    {
-                        //이때 obj가 자물쇠의 역할을 새준다고 생각하면 된다 이를 빠져나올때 잠금을 풀어주는거
-                        number--;
-                    }
-                }
-            }
-
-            static void Main(string[] args)
-            {
-
-                Task t1 = new Task(Thread_1);
-                Task t2 = new Task(Thread_2);
-                t1.Start();
-                t2.Start();
-
-                Console.WriteLine(number);
+                SessionManager.Test(); 
             }
         }
+        static void Thread_2()
+        {
+            for (int i = 0; i < 10000000; i++)
+            {
+                UserManager.Test();
+            }
+        }
+        static void Main(string[] args)
+        {
+            Task t1 = new Task(Thread_1);
+            Task t2 = new Task(Thread_2);
+            /*t1.Start();
+            t2.Start();*/
 
+            t1.Start();
+            Thread.Sleep(100); // 강제로 시간을 어긋나게 하면 대드락 해결된다 (이런건 크러쉬가 일어나면 고치면 된다)
+            //락을 걸기전에 각 클래스로 만들어 id를 준다 그리고 id 차이를 본다음 문제가 있는지 여부를 확인한다
+            t2.Start();
+            Task.WaitAll(t1, t2);
+            
+        }
     }
+
 }
