@@ -1,4 +1,4 @@
-﻿using System;
+﻿/*using System;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -49,8 +49,13 @@ namespace ServerCore
                 ;
                 //프로그램이 종료되지 않게
             }
+            //사실 스래드를 만든건 없지만 콜백함수는 별도의 스래드에서 실행되고 있다.
+            //자동으로 스레드풀을 사용하고 있는거
+            //두개의 스레드가 같은 데이터를 건드리고 있다면 위험하게 된다.
+            //이를 염두하고 코딩해야 한다.
+            //락을 걸던 동기화 문제를 해결하면서 작업해야한다.
 
         }
     }
 
-}
+}*/

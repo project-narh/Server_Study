@@ -20,12 +20,16 @@ namespace ServerCore
             _onAcceptHandler += onAcceptHandler;
             _listenSocket.Bind(endPoint);
             _listenSocket.Listen(10);
-
+            //문지기가 하나라서 사람이 많으면 더 많이 만들면 된다.
             SocketAsyncEventArgs args = new SocketAsyncEventArgs();//한번만들면 계속 재사용 가능
-            args.Completed += new EventHandler<SocketAsyncEventArgs>(OnAcceptCompleted); // 델리게이트로 이벤트 핸들러 등록
-            //클라이언트에서 연결 요청이 오면 OnAcceptCompleted가 콜백
-            //최초로 낚시대를 던진것
+            args.Completed += new EventHandler<SocketAsyncEventArgs>(OnAcceptCompleted); // 델리게이트로 이벤트 핸들러 등록                                                                       //최초로 낚시대를 던진것
             RegisterAccept(args);
+            /*for(int i = 0; i < 10; i++)
+            {
+                SocketAsyncEventArgs args = new SocketAsyncEventArgs();//한번만들면 계속 재사용 가능
+                args.Completed += new EventHandler<SocketAsyncEventArgs>(OnAcceptCompleted); // 델리게이트로 이벤트 핸들러 등록                                                                       //최초로 낚시대를 던진것
+                RegisterAccept(args);
+            } // 낚시대를 10개정도 만들어놔도 상관 없다*/
         }
 
         void RegisterAccept(SocketAsyncEventArgs args) // 접속시도 이제 비동기로 예약
@@ -35,6 +39,7 @@ namespace ServerCore
             bool pending = _listenSocket.AcceptAsync(args); // 바로될수도 있고 아닐 수도 있구
             if (pending == false)//운 좋게 바로 접속이 된경우
                 OnAcceptCompleted(null, args);
+            //유저들이 작정하고 공격하지 않는 이상 스택 오버플로어 일어날일 없다
         }
 
         void OnAcceptCompleted(object sender, SocketAsyncEventArgs args) // 접속 완료
