@@ -1,4 +1,4 @@
-﻿using System;
+﻿/*using System;
 
 namespace ServerCore
 {
@@ -45,7 +45,7 @@ namespace ServerCore
 
     class Program
     {
-        /*락이 걸려 접근을 못하는 경우는 코드를 잘못짠거
+        *//*락이 걸려 접근을 못하는 경우는 코드를 잘못짠거
         고차원적인 데드락이 많다
         자물쇠가 2개가 있고 둘다 잠궈야지 화장실에 들어갈 수 있다고 가정하는데
 
@@ -61,7 +61,7 @@ namespace ServerCore
         
         이는 Monitor로 해결
         Monitor에는 TryEnter라는게 존재 락을 얻는데 실패하면 나간다 이런 방법이 있지만 애초에 그러면 락에 문제가 있다는 것
-        */
+        *//*
 
         static void Thread_1()
         {
@@ -81,8 +81,8 @@ namespace ServerCore
         {
             Task t1 = new Task(Thread_1);
             Task t2 = new Task(Thread_2);
-            /*t1.Start();
-            t2.Start();*/
+            *//*t1.Start();
+            t2.Start();*//*
 
             t1.Start();
             Thread.Sleep(100); // 강제로 시간을 어긋나게 하면 대드락 해결된다 (이런건 크러쉬가 일어나면 고치면 된다)
@@ -93,4 +93,4 @@ namespace ServerCore
         }
     }
 
-}
+}*/
