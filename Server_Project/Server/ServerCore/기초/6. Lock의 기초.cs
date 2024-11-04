@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace ServerCore
+namespace ServerCore.기초
 {
     /*같은 변수를 다른 쓰레드에서 사용한다면 이걸 가져올때 문제가 된다는것을 저번에 확인했다
      크리티컬 섹션 - 인계영역
@@ -40,46 +40,46 @@ namespace ServerCore
                 *//*               Monitor.Enter(_obj); // 문을 잠그는 행위
                                number++;
                                Monitor.Exit(_obj); // 작업이 끝나서 문을 다시 열었다면*/
-                /*try
-                {
-                    Monitor.Enter(_obj);
-                    number++;
-                    return;
-                }
-                finally { Monitor.Exit(_obj); }*//*
-                lock (_obj)
-                {
-                    //이때 obj가 자물쇠의 역할을 새준다고 생각하면 된다 이를 빠져나올때 잠금을 풀어주는거
-                    number++;
-                }
-            }
-        }
+    /*try
+    {
+        Monitor.Enter(_obj);
+        number++;
+        return;
+    }
+    finally { Monitor.Exit(_obj); }*//*
+    lock (_obj)
+    {
+        //이때 obj가 자물쇠의 역할을 새준다고 생각하면 된다 이를 빠져나올때 잠금을 풀어주는거
+        number++;
+    }
+}
+}
 
-        static void Thread_2()
-        {
-            for (int i = 0; i < 10000000; i++)
-            {
-                *//*Monitor.Enter(_obj); // 문이 잠겨있으니 대기 > 문이 열렸다면 이제 들어가서 문을 잠군다
-                number--;
-                Monitor.Exit(_obj);*//*
-                lock (_obj)
-                {
-                    //이때 obj가 자물쇠의 역할을 새준다고 생각하면 된다 이를 빠져나올때 잠금을 풀어주는거
-                    number--;
-                }
-            }
-        }
+static void Thread_2()
+{
+for (int i = 0; i < 10000000; i++)
+{
+    *//*Monitor.Enter(_obj); // 문이 잠겨있으니 대기 > 문이 열렸다면 이제 들어가서 문을 잠군다
+    number--;
+    Monitor.Exit(_obj);*//*
+    lock (_obj)
+    {
+        //이때 obj가 자물쇠의 역할을 새준다고 생각하면 된다 이를 빠져나올때 잠금을 풀어주는거
+        number--;
+    }
+}
+}
 
-        static void Main(string[] args)
-        {
+static void Main(string[] args)
+{
 
-            Task t1 = new Task(Thread_1);
-            Task t2 = new Task(Thread_2);
-            t1.Start();
-            t2.Start();
+Task t1 = new Task(Thread_1);
+Task t2 = new Task(Thread_2);
+t1.Start();
+t2.Start();
 
-            Console.WriteLine(number);
-        }
+Console.WriteLine(number);
+}
 
-    }*/
+}*/
 }

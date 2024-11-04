@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace ServerCore
+namespace ServerCore.기초
 {
     /*class Program
     {*//*
