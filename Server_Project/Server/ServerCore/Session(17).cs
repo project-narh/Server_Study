@@ -38,7 +38,7 @@ namespace ServerCore
         SocketAsyncEventArgs _recvArgs = new SocketAsyncEventArgs(); // _sendArgs처럼 빼도 무관 다만 C++서버는 이런식
         SocketAsyncEventArgs _sendArgs = new SocketAsyncEventArgs(); // 재사용 해야지 계속 생성하는건 말이 안되고 의미도 없어
         List<ArraySegment<byte>> _Pendinglist = new List<ArraySegment<byte>>(); // 말그대로 대기중인 목록
-        Queue<byte[]> _sendQueue = new Queue<byte[]>();
+        Queue<ArraySegment<byte>> _sendQueue = new Queue<ArraySegment<byte>>();
         object _lock = new object();
 
         public abstract void OnConnected(EndPoint endPoint); // 이건 리스너에서 해주고 있었다
@@ -102,11 +102,11 @@ namespace ServerCore
                 //버퍼 전달이 안되도 버퍼를 맘대로 바꿀 수 있기 때문
                 //매번 RegisterSend로 보내는게 아닌 전송이 끝날때 까지 모든 데이터를 큐에 쌓아두고 완료되면 보내는 방식*/
 
-        public void Send(byte[] sendBuff)
+        public void Send(ArraySegment<byte> sendBuff)
         {
             lock (_lock) //락을 잡아 한번에 한명씩만
             {
-                _sendQueue.Enqueue(sendBuff);
+                _sendQueue.Enqueue(sendBuff); // 큐도 변경
                 //즉 리스트를 따로 관리하고 있으니 이것도 이렇게 리스트로 확인이 가능
                 if (_Pendinglist.Count == 0 ) Registersend(); // 이대로 사용해도 무관하나 좀 더 최적화하기 위해선 해당 메소드를 건드려야한다 
 
@@ -134,10 +134,11 @@ namespace ServerCore
             //즉 리스트를 만들어 사용하면 더 효율적
             //조심할 점으로는 SetBuffer와 BufferList를 동시에 사용하면 에러 즉 한개만 선태 
 
+            //이제 이쪽은 멀티쓰레드를 고려해야한다
             while (_sendQueue.Count > 0)
             {
-                byte[] buff = _sendQueue.Dequeue();
-                _Pendinglist.Add(new ArraySegment<byte>(buff, 0, buff.Length));
+                ArraySegment<byte> buff = _sendQueue.Dequeue(); //이도 동일하게 ArraySegment로 변경
+                _Pendinglist.Add(buff);
                 //_sendArgs.BufferList.Add(buff, 0, buff.Length); 이렇게 넣으면 안된다
                 //_sendArgs.BufferList.Add(new ArraySegment<byte>(buff, 0, buff.Length));
                 //byte[] 배열이 아닌 Arraysement를 원하기 때문
