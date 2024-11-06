@@ -28,10 +28,11 @@ namespace DummyClinet
             Console.WriteLine($"OnDisconnected {endPoint}");
         }
 
-        public override void OnRecv(ArraySegment<byte> buffer) // 현재 하는 작업은 엔진과 컨텐츠를 분리하는 작업
+        public override int OnRecv(ArraySegment<byte> buffer) // 현재 하는 작업은 엔진과 컨텐츠를 분리하는 작업
         {
             string recvData = Encoding.UTF8.GetString(buffer.Array, buffer.Offset, buffer.Count); // 어디서부터 시작하냐 Offset
             Console.WriteLine($"[From Server]{recvData}");
+            return buffer.Count;
         }
 
         public override void OnSend(int numOfBytes)

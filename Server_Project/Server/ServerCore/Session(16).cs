@@ -31,29 +31,46 @@ namespace ServerCore
     {
         Socket _socket;
         int _disconnected = 0;
+
+        //리시브 버퍼 추가
+        RecvBuffer _recvBuffer = new RecvBuffer(1024);
+
+        SocketAsyncEventArgs _recvArgs = new SocketAsyncEventArgs(); // _sendArgs처럼 빼도 무관 다만 C++서버는 이런식
         SocketAsyncEventArgs _sendArgs = new SocketAsyncEventArgs(); // 재사용 해야지 계속 생성하는건 말이 안되고 의미도 없어
         List<ArraySegment<byte>> _Pendinglist = new List<ArraySegment<byte>>(); // 말그대로 대기중인 목록
         Queue<byte[]> _sendQueue = new Queue<byte[]>();
         object _lock = new object();
 
         public abstract void OnConnected(EndPoint endPoint); // 이건 리스너에서 해주고 있었다
-        public abstract void OnRecv(ArraySegment<byte> buffer);
+        //데이터를 
+        public abstract int OnRecv(ArraySegment<byte> buffer); //데이터를 얼마나 처리했는지 확인하기 위해 void에서 int로 변경
         public abstract void OnSend(int numOfBytes);
         public abstract void OnDisconnected(EndPoint endPoint);
 
         public void Start(Socket socket)
         {
             _socket = socket;
-            SocketAsyncEventArgs recvArgs = new SocketAsyncEventArgs(); // _sendArgs처럼 빼도 무관 다만 C++서버는 이런식
-            recvArgs.Completed += new EventHandler<SocketAsyncEventArgs>(OnRecvCompleted);
-            recvArgs.SetBuffer(new byte[1024], 0, 1024);
+            //SocketAsyncEventArgs recvArgs = new SocketAsyncEventArgs(); // _sendArgs처럼 빼도 무관 다만 C++서버는 이런식
+            _recvArgs.Completed += new EventHandler<SocketAsyncEventArgs>(OnRecvCompleted);
+            //이제 이 위치에서 하는게 아니다
+            //recvArgs.SetBuffer(new byte[1024], 0, 1024);
+           
+            
+            //버퍼의 offset은 0이고 크기는 1024까지 가능한 버퍼
+            //TCP는 100를 보낸다고 전부 100으로 온다는 보장이 없다.
+            //그러면 넘어온 바이트를 파악하고 전부다 안오면 리시브 곱하기 보간만 하고 있다가 추가로 오면
+            //이를 조립해서 완성시켜 한번에 처리가 되도록 수정해야 한다
+            //지금까지의 코드는 완벽하게 왔다는 가정하에 만들고 있다
+            //만약 80의 데이터가 오면 오프셋을 조정해서 더 받아야 할거야
+
+
             //이렇게 하는 이유는 버퍼를 엄청 크게 나눠서 세션끼리 나눠쓰는 경우가 있기 때문
             //이렇게 하면 세션을 만들때 마다 버퍼를 만듬
             //추가 정보를 주고 싶으면
             //recvArgs.UserToken = 어떤 정보든 상관 없음; 식별자나 연동하고 싶은 데이터가 있을대
             //SetBuffer로 해줘야한다 기존에 리슨때는 args.AcceptSocket = null;
             _sendArgs.Completed += new EventHandler<SocketAsyncEventArgs>(OnRecvCompleted);
-            RegisterRecv(recvArgs);
+            RegisterRecv();
 
             //낚시대를 쓰고 올려서 다시 던지고하는것과 같다
 
@@ -185,12 +202,26 @@ namespace ServerCore
                 }
             }
         }
-        void RegisterRecv(SocketAsyncEventArgs args)
+        /*void RegisterRecv(SocketAsyncEventArgs args)
         {
+            //이제 여기에서 현재 사용할 수 있는 버퍼를 찝어줘야 한다
+            ArraySegment<byte> segment =  _recvBuffer.WriteSegment;
+            _recvArgs.SetBuffer(segment.Array, segment.Offset, segment.Count);
+
             bool pending = _socket.ReceiveAsync(args);
             if (!pending) OnRecvCompleted(null, args);
+        }*/
+        void RegisterRecv()
+        {
+            //이제 여기에서 현재 사용할 수 있는 버퍼를 찝어줘야 한다
+            _recvBuffer.Clean();
+            ArraySegment<byte> segment = _recvBuffer.WriteSegment;
+            _recvArgs.SetBuffer(segment.Array, segment.Offset, segment.Count);
+
+            bool pending = _socket.ReceiveAsync(_recvArgs);
+            if (!pending) OnRecvCompleted(null, _recvArgs);
         }
-        
+
         void OnRecvCompleted(object sender, SocketAsyncEventArgs args)
         {
             //이부분은 좀 다름
@@ -199,8 +230,30 @@ namespace ServerCore
                 //TODO
                 try
                 {
-                    OnRecv(new ArraySegment<byte>(args.Buffer, args.Offset, args.BytesTransferred));
-                    RegisterRecv(args);
+                    //write 커서를 이동해야 한다
+                    if(_recvBuffer.OnWrite(args.BytesTransferred) == false)// 이런 상황이 일어난다면이건 버그
+                    {
+                        Disconnect();
+                        return;
+                    }
+
+                    //컨텐츠 쪽으로 데이터를 넘겨주고 얼마나 처리했는지 받는다.
+                    int processLen = OnRecv(_recvBuffer.ReadSegment);
+                    if(processLen < 0 || _recvBuffer.DataSize < processLen) // 문제가 있는 상황
+                    {
+                        Disconnect();
+                        return;
+                    }
+
+                    //Read 커서 이동
+                    if(_recvBuffer.OnRead(processLen) == false)
+                    {
+                        Disconnect();
+                        return;
+                    }
+
+                    //OnRecv(new ArraySegment<byte>(args.Buffer, args.Offset, args.BytesTransferred)); //처음부터 끝까지 유효범위였다
+                    RegisterRecv();
                 }
                 catch(Exception e)
                 {
