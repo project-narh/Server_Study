@@ -8,6 +8,47 @@ using System.Threading.Tasks;
 
 namespace ServerCore
 {
+    //패킷 세션을 만들어준다
+    public abstract class PacketSession : Session
+    {
+        public static readonly int HeaderSize = 2;
+
+        //패킷이 왔다는건 [size(2)][packetId(2)][추가적인 내용]... [size(2)][packetId(2)][추가적인 내용]이런식으로 올거
+        //운나쁘게 1바이트만 오면 다른게 올때 까지 기다리고
+        //2바이트가 왔다고 하면 지금 분석하는 패킷이 몇바이트짜리인지 보고 해당하는 데이터가 올때까지 기다렸다가 처리하는 방식으로 이뤄질 것
+        
+        // 패킷 내용의 사이즈를 패킷 크기의 사이즈를 보내줄지, 아니면 헤더를 포함한 패킷 내용의 사이즈를 포함할지는 정해주면 된다
+        //전체를 추천한다.
+        
+        public sealed override int OnRecv(ArraySegment<byte> buffer) // sealed는 다른 클래스에서 패킷세션을 상속받아서 OnRecv를 오버라이드하려면 에러가 뜬다
+        {
+            int processLen = 0; // 몇바이트를 처리했는지
+            while (true) // 패킷을 계속 처리할 수 있을대 까지 처리
+            {
+                if (buffer.Count < HeaderSize) //2보다 작으면 말이 안된다 왜냐 ushort로 받기 때문 (최소한 헤더는 파싱할 수 있는지 확인)
+                    break;
+                //패킷이 완전체로 도착했는지 확인
+                ushort dataSize = BitConverter.ToUInt16(buffer.Array, buffer.Offset);
+                if (buffer.Count < dataSize) //패킷이 완전체가 아닌 부분적으로 온 경우
+                    break;
+
+                //여기까지 왔다면 패킷을 조집하는게 가능하다
+                OnRecvPacket(new ArraySegment<byte>(buffer.Array, buffer.Offset, dataSize));//여기에 들어갈건 패킷을 만들어서 보내줘도 되고 해당 영역을 찝어줘도 된다 지금할건 패킷 영역 찝어주기
+                                                                                            //패킷의 범위를 보내주는거야
+                processLen += dataSize;
+
+                //데이터가 패킷 세트 하나가 끝난다면 다른 세트를 해줘야 한다 이동해야 하니
+                buffer = new ArraySegment<byte>(buffer.Array, buffer.Offset + dataSize, buffer.Count - dataSize); // 힙 영역 아님 스택이라 상관없음
+                //buffer.Slice(); 이런 함수로 잘라서 보내줘도 된다
+            }
+            return processLen;
+        }
+
+        public abstract void OnRecvPacket(ArraySegment<byte> buffer); // 이제 페킷 세션을 사용하는 사람들은 OnRecvPacket로 받으라고 바꿔치기
+        //이를 컨텐츠 딴에서 분기해서 진행하면 된다.
+    }
+
+
     // 이번 시간은 이벤트 핸들러
     //패킷을 보낼때 send로 보낸다 그런데 반대로 받는건 그냥 하드코딩으로 콘솔에다만 로그를 찍고 끝냈다
     //콜백이든 뭐든 메시지를 받았다는걸 연동해야 한다
