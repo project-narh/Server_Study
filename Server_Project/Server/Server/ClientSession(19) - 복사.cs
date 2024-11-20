@@ -1,20 +1,21 @@
-﻿//using System;
+﻿//using ServerCore;
+//using System;
+//using System.Collections.Generic;
+//using System.Linq;
 //using System.Net;
-//using System.Net.Sockets;
 //using System.Text;
-//using static System.Collections.Specialized.BitVector32;
-//using ServerCore; // 추가 서버 코어를 라이브러리화하였기 때문에
+//using System.Threading.Tasks;
 
-////이로서 서버 코어는 엔진    서버는 콘텐츠를 관리할 수 있게 되었다
-//// 세션 인터페이스만 사용하고 이벤트만 지정해서 사용하고 있다 현재
+////이렇게 세션을 나누는 이유는? 연결해야 하는게 더 있을 수 있다 (다른 서버, DB 등)
+////이름이 클라이언트 세션인 이유는 클라이언트와 소통하니까
 
 //namespace Server
 //{
-//    패킷을 구분하는 방법은 뭘까?
+//    /*패킷을 구분하는 방법은 뭘까?
 //ID로 1 이동 2 채팅 이런식으로 하는 방법이 있을 수 있다
 
 //다만 문제는 경우에 따라 유동적으로 사이즈가 달라질 수 있다는 점이다
-//그래서 첫 인자로 size 두번째로 ID를 넘겨주는 경우가 대다수이다. (int short 둘 중 ushort로 충분히 사용하긴 한다)*//*
+//그래서 첫 인자로 size 두번째로 ID를 넘겨주는 경우가 대다수이다. (int short 둘 중 ushort로 충분히 사용하긴 한다)*/
 //    class Packet
 //    {
 //        public ushort size;
@@ -26,7 +27,24 @@
 //    {
 //        //이렇게 종속하게 만들어서 거의 제작한다.
 //    }
-//    class GameSession : PacketSession //session > PacketSession
+//    //간단하게 패킷 구성(임시다 나중에는 자동화)
+//    class PlayerInfoReq : Packet
+//    {
+//        public long playerId;
+//    }
+
+//    class PlayerInfoOk : Packet
+//    {
+//        public int hp;
+//        public int attack;
+//    }
+
+//    public enum PacketID // 지금은 이렇게 하드코딩 하지만 나중에는 자도오하
+//    {
+//        PlayerInfoReq = 1, PlayerInfoOk = 2,
+//    }
+
+//    class ClientSession : PacketSession //session > PacketSession
 //    {
 //        public override void OnConnected(EndPoint endPoint)
 //        {
@@ -60,43 +78,17 @@
 //        }
 
 //        //sealed로 막아줘서 이제 사용 X
-//        *//*        public override int OnRecv(ArraySegment<byte> buffer) // 현재 하는 작업은 엔진과 컨텐츠를 분리하는 작업
+//        /*        public override int OnRecv(ArraySegment<byte> buffer) // 현재 하는 작업은 엔진과 컨텐츠를 분리하는 작업
 //                {
 //                    string recvData = Encoding.UTF8.GetString(buffer.Array, buffer.Offset, buffer.Count); // 어디서부터 시작하냐 Offset
-//        Console.WriteLine($"[From client]{recvData}");
+//                    Console.WriteLine($"[From client]{recvData}");
 //                    return buffer.Count;
-//                }*//*
+//                }*/
 
 
 //        public override void OnSend(int numOfBytes)
-//    {
-//        Console.WriteLine($"Transferred byte {numOfBytes}");
-//    }
-//}
-
-
-//class Program
-//    {
-//        static Listener _listener = new Listener();
-
-//        static void Main(string[] args)
 //        {
-//            string host = Dns.GetHostName();
-//            IPHostEntry ipHost = Dns.GetHostEntry(host);
-//            IPAddress ipAddr = ipHost.AddressList[0];
-//            IPEndPoint endPoint = new IPEndPoint(ipAddr, 7777);
-
-//            _listener.Init(endPoint, () => { return new GameSession(); }); // 람다로 간단히 처리
-
-//            Console.WriteLine("Listening...");
-
-//            //영업을 한 번만 하고 마는게 아니니까 무한 루프
-//            while (true)
-//            {
-//                ;
-//                //프로그램이 종료되지 않게
-//            }
-
+//            Console.WriteLine($"Transferred byte {numOfBytes}");
 //        }
 //    }
 //}
