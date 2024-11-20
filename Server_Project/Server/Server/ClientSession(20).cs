@@ -16,28 +16,68 @@
 
 //다만 문제는 경우에 따라 유동적으로 사이즈가 달라질 수 있다는 점이다
 //그래서 첫 인자로 size 두번째로 ID를 넘겨주는 경우가 대다수이다. (int short 둘 중 ushort로 충분히 사용하긴 한다)*/
-//    class Packet
+//    public abstract class Packet
 //    {
+//        //사이즈랑 아이디는 삭제해도 무관하다
 //        public ushort size;
 //        public ushort packetId;
+
+//        //패킷 만드는거 자도오하 할거임
+//        public abstract ArraySegment<byte> Write();
+//        public abstract void Read(ArraySegment<byte> s);
 //        //int로 하는것보다 4바이트를 아깔 수 있다.
 //    }
 
-//    class LoginOKPacket : Packet
+///*    class LoginOKPacket : Packet
 //    {
 //        //이렇게 종속하게 만들어서 거의 제작한다.
-//    }
+//    }*/
 //    //간단하게 패킷 구성(임시다 나중에는 자동화)
 //    class PlayerInfoReq : Packet
 //    {
 //        public long playerId;
+
+//        public PlayerInfoReq()
+//        {
+//            this.packetId = (ushort)PacketID.PlayerInfoReq;
+//        }
+
+//        public override void Read(ArraySegment<byte> s)
+//        {
+//            ushort count = 0;
+//            //ushort size = BitConverter.ToUInt16(s.Array, s.Offset);//의미 없어보이긴함 여기있는거
+//            count += 2;
+//            //ushort id = BitConverter.ToUInt16(s.Array, s.Offset + count);//의미 없어보이긴함 여기있는거
+//            count += 2;
+
+//            this.playerId = BitConverter.ToInt64(new ReadOnlySpan<byte>(s.Array, s.Offset + count, s.Count - count));//이제 사이즈가 다르면 에러 뜬당 
+//            //그런데 패킷을 신용할 수 없다고 했는데 왜 사이즈를 믿을까? 그건 반정도는 믿기 때문에 맞다고 가정하는 상황
+//            count += 8;
+//        }
+
+//        public override ArraySegment<byte> Write()
+//        {
+//            ArraySegment<byte> s = SendBufferHelper.Open(4096);
+//            bool success = true;
+//            ushort count = 0;
+//            // 유니티에서도 되는지는 확인해봐야 한다
+//            count += 2; //걱정마 이것도 자동화 해줄거야
+//            success &= BitConverter.TryWriteBytes(new Span<byte>(s.Array, s.Offset + count, s.Count - count), this.packetId); // 이제는 자신이 패킷
+//            count += 2;
+//            success &= BitConverter.TryWriteBytes(new Span<byte>(s.Array, s.Offset + count, s.Count - count), this.playerId);
+//            count += 8;
+//            success &= BitConverter.TryWriteBytes(new Span<byte>(s.Array, s.Offset, s.Count), count);
+
+//            if (!success) return null;
+//            return SendBufferHelper.Close(12);
+//        }
 //    }
 
-//    class PlayerInfoOk : Packet
+///*    class PlayerInfoOk : Packet
 //    {
 //        public int hp;
 //        public int attack;
-//    }
+//    }*/
 
 //    public enum PacketID // 지금은 이렇게 하드코딩 하지만 나중에는 자도오하
 //    {
@@ -84,9 +124,11 @@
 //            {
 //                case PacketID.PlayerInfoReq:
 //                    {
-//                        long playerId = BitConverter.ToUInt16(buffer.Array, buffer.Offset + count);
-//                        count += 8;
-//                        Console.WriteLine($"PlayerInfoReq : {playerId}");
+//                        /*long playerId = BitConverter.ToUInt16(buffer.Array, buffer.Offset + count);
+//                        count += 8;*/
+//                        PlayerInfoReq p = new PlayerInfoReq();
+//                        p.Read(buffer);
+//                        Console.WriteLine($"PlayerInfoReq : {p.playerId}");
 //                    }
 //                    break;
 //            }
