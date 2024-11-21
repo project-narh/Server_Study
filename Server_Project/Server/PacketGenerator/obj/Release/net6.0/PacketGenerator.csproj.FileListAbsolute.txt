@@ -1,0 +1,15 @@
+D:\Git\Server_Study\Server_Project\Server\PacketGenerator\bin\Release\net6.0\PacketGenerator.exe
+D:\Git\Server_Study\Server_Project\Server\PacketGenerator\bin\Release\net6.0\PacketGenerator.deps.json
+D:\Git\Server_Study\Server_Project\Server\PacketGenerator\bin\Release\net6.0\PacketGenerator.runtimeconfig.json
+D:\Git\Server_Study\Server_Project\Server\PacketGenerator\bin\Release\net6.0\PacketGenerator.dll
+D:\Git\Server_Study\Server_Project\Server\PacketGenerator\bin\Release\net6.0\PacketGenerator.pdb
+D:\Git\Server_Study\Server_Project\Server\PacketGenerator\obj\Release\net6.0\PacketGenerator.GeneratedMSBuildEditorConfig.editorconfig
+D:\Git\Server_Study\Server_Project\Server\PacketGenerator\obj\Release\net6.0\PacketGenerator.AssemblyInfoInputs.cache
+D:\Git\Server_Study\Server_Project\Server\PacketGenerator\obj\Release\net6.0\PacketGenerator.AssemblyInfo.cs
+D:\Git\Server_Study\Server_Project\Server\PacketGenerator\obj\Release\net6.0\PacketGenerator.csproj.CoreCompileInputs.cache
+D:\Git\Server_Study\Server_Project\Server\PacketGenerator\obj\Release\net6.0\PacketGenerator.sourcelink.json
+D:\Git\Server_Study\Server_Project\Server\PacketGenerator\obj\Release\net6.0\PacketGenerator.dll
+D:\Git\Server_Study\Server_Project\Server\PacketGenerator\obj\Release\net6.0\refint\PacketGenerator.dll
+D:\Git\Server_Study\Server_Project\Server\PacketGenerator\obj\Release\net6.0\PacketGenerator.pdb
+D:\Git\Server_Study\Server_Project\Server\PacketGenerator\obj\Release\net6.0\PacketGenerator.genruntimeconfig.cache
+D:\Git\Server_Study\Server_Project\Server\PacketGenerator\obj\Release\net6.0\ref\PacketGenerator.dll
