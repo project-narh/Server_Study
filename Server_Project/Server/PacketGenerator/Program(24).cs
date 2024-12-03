@@ -50,6 +50,8 @@ namespace PacketGenerator
             // {2} 맴버 번수 Read
             // {3} 맴버 변수 Write
             Tuple<string, string, string> t = ParseMembers(r);
+
+
             if (t == null || string.IsNullOrEmpty(t.Item1) || string.IsNullOrEmpty(t.Item2) || string.IsNullOrEmpty(t.Item3))
             {
                 Console.WriteLine($"Error parsing members for packet: {packetName}");
@@ -67,6 +69,9 @@ namespace PacketGenerator
             }
             catch (FormatException ex)
             {
+                Console.WriteLine($"FormatException in packet: {packetName}");
+                Console.WriteLine($"Error Details: {ex.Message}================");
+
                 Console.WriteLine($"FormatException in packet: {packetName}");
                 Console.WriteLine($"packetName: {packetName}");
                 Console.WriteLine($"t.Item1: {t.Item1}");
@@ -149,7 +154,7 @@ namespace PacketGenerator
                 case "long":
                     return "ToInt64";
                 case "float":
-                    return "ToSomgle";
+                    return "ToSingle";
                 case "double":
                     return "ToDouble";
                 default:
