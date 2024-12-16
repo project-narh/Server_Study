@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Xml;
 
 namespace PacketGenerator
@@ -7,7 +8,8 @@ namespace PacketGenerator
     class Program
     {
         static string genPackets; // 만들어지는 패킷들을 저장한다
-
+        static ushort packetId;
+        static string packetEnums; // 패킷을 몇개 처리했는지 기억해야 해서 위 변수
         static void Main(string[] args)
         {
             XmlReaderSettings settings = new XmlReaderSettings() // XML 동작방식 설정
@@ -26,10 +28,11 @@ namespace PacketGenerator
                         ParsePacket(r);
                     //Console.WriteLine(r.Name +  "  " + r["name"]);
                 }
-                File.WriteAllText("GenPackets.cs", genPackets);
+                string fileText = string.Format(PacketFormat.fileFormat,packetEnums,genPackets);
+                File.WriteAllText("GenPackets.cs", fileText);
             }
         }
-        static void ParsePacket(XmlReader r)
+        static void ParsePacket(XmlReader r) // 하나의 패킷 단위니 여기서 Enum도 진행
         {
             if (r.NodeType == XmlNodeType.EndElement) return;
             if (r.Name.ToLower() != "packet")
@@ -58,14 +61,15 @@ namespace PacketGenerator
                 return;
             }
 
-            Console.WriteLine($"packetName: {packetName}");
+/*            Console.WriteLine($"packetName: {packetName}");
             Console.WriteLine($"t.Item1: {t.Item1}");
             Console.WriteLine($"t.Item2: {t.Item2}");
-            Console.WriteLine($"t.Item3: {t.Item3}");
+            Console.WriteLine($"t.Item3: {t.Item3}");*/
 
             try
             {
                 genPackets += string.Format(PacketFormat.packetFormat, packetName, t.Item1, t.Item2, t.Item3);
+                packetEnums += string.Format(PacketFormat.packetEnumFormat, packetName, ++packetId) + Environment.NewLine + "\t";
             }
             catch (FormatException ex)
             {
@@ -112,8 +116,14 @@ namespace PacketGenerator
                 Console.WriteLine($"{memberName}  {memberType}");
                 switch (memberType)
                 {
+                    //byte와 sbyte 추가
+                    case "byte":// 기존에는 ToIn64로 얻고 있는데 바이트 배열인데 이렇게 할 필요가 있을까? 그래서 수정 
+                    case "sbyte":
+                        memeberCode += string.Format(PacketFormat.memberFormat, memberType, memberName);
+                        readCode += string.Format(PacketFormat.readByteFormat, memberName, memberType); // 변환할 필요 없이 넣으면 된다 지금 가진게 바이트니까
+                        writeCode += string.Format(PacketFormat.writeByteFormat, memberName, memberType);
+                        break;
                     case "bool":
-                    case "byte":
                     case "short":
                     case "ushort":
                     case "int":
@@ -130,12 +140,52 @@ namespace PacketGenerator
                         writeCode += string.Format(PacketFormat.writeStringFormat, memberName);
                         break;
                     case "list":
+                        Tuple<string, string, string> t = ParseList(r);
+                        memeberCode += t.Item1;
+                        readCode += t.Item2;
+                        writeCode += t.Item3;
+                        break;
                     default:
                         break;
 
                 }
             }
+            memeberCode = memeberCode.Replace("\n", "\n\t");
+            readCode = readCode.Replace("\r", "\n\t\t"); // 코드 정리
+            writeCode = writeCode.Replace("\n", "\n\t\t");
             return new Tuple<string, string, string>(memeberCode, readCode, writeCode);
+
+        }
+
+        public static Tuple<string, string, string> ParseList(XmlReader r)
+        {
+            string listName = r["name"];
+            Console.WriteLine(listName);
+            if(string.IsNullOrEmpty(listName))
+            {
+                Console.WriteLine("List without name");
+                return null;
+            }
+            Tuple<string, string, string> t = ParseMembers(r);
+            string memberCode = string.Format(PacketFormat.memberListFormat,
+                 FirstCharToUpper(listName),
+                 FirstCharToLower(listName),
+                 t.Item1,
+                 t.Item2,
+                 t.Item3);
+            Console.WriteLine(FirstCharToUpper(listName));
+            Console.WriteLine(FirstCharToLower(listName));
+            Console.WriteLine(t.Item1);
+            Console.WriteLine(t.Item2);
+            Console.WriteLine(t.Item3);
+
+            string readCode = string.Format(PacketFormat.readListFormat,
+                FirstCharToUpper(listName),
+                FirstCharToLower(listName));
+            string writeCode = string.Format(PacketFormat.writeListFormat,
+               FirstCharToUpper(listName),
+               FirstCharToLower(listName));
+            return new Tuple<string, string, string>(memberCode, readCode, writeCode);
 
         }
 
@@ -161,6 +211,17 @@ namespace PacketGenerator
                     return "";
 
             }
+        }
+        public static string FirstCharToUpper(String input)
+        {
+            if (string.IsNullOrEmpty(input)) return "";
+            return input[0].ToString().ToUpper() + input.Substring(1);
+        }
+
+        public static string FirstCharToLower(String input) // 모든 애들이 다 소문자(첫 캐릭터만 소문자로)
+        {
+            if (string.IsNullOrEmpty(input)) return "";
+            return input[0].ToString().ToLower() + input.Substring(1);
         }
     }
 }
