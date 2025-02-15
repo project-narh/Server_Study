@@ -80,6 +80,12 @@ ID로 1 이동 2 채팅 이런식으로 하는 방법이 있을 수 있다
         static Listener _listener = new Listener();
         public static GameRoom Room = new GameRoom();
 
+        static void FlushRoom() // 실행 및 예약
+        {
+            Room.Push(() => Room.Flush());
+            JobTimer.Instance.Push(FlushRoom, 250);
+        }
+
         static void Main(string[] args)
         {
             string host = Dns.GetHostName();
@@ -91,12 +97,41 @@ ID로 1 이동 2 채팅 이런식으로 하는 방법이 있을 수 있다
             _listener.Init(endPoint, () => { return SessionManager.Instance.Generate(); }); // 람다로 간단히 처리
             Console.WriteLine("Listening...");
 
+            //만일 룸뿐만이 아니라 인자가 늘어난다면 그만큼 Tick 변수를 만들어서 관리해야 한다(1번 방법)
+            //int roomTick = 0;
+
+            //FlushRoom(); // 한번은 미리 실행 (이렇게 해도 되고)
+            JobTimer.Instance.Push(FlushRoom); // 이렇게 바로 예약해도 됨
+
             //영업을 한 번만 하고 마는게 아니니까 무한 루프
             while (true)
             {
-                Room.Push(()=> Room.Flush()); //모은 패킷 보내기 0.25초마다
-                Thread.Sleep(250);
+                //기존 방식
+                //Room.Push(()=> Room.Flush()); //모은 패킷 보내기 0.25초마다
+                //Thread.Sleep(250);
+
                 //프로그램이 종료되지 않게
+
+                /*
+                 * 만일 룸이 여러개라면? 실행해야 하는 객체가 많다면 지금처럼 Flush 하는 시간이 다를것
+                그러면 시간 관리를 어떻게 해야하지?
+                */
+
+                ////1. Tick을 이용
+                //int now = System.Environment.TickCount;
+                //if(roomTick < now)
+                //{
+                //    Room.Push(() => Room.Flush());
+                //    roomTick = now + 250;
+                //}
+                ////그리고 룸뿐만 아닌 인자가 늘면 그만큼 위와 같이 코드를 추가해야 한다
+                ////중앙에서 하는게 무식해보이지만 클라 플밍마냥 간단해진다.
+                ////멀티 스레드를 몰라도 간단하게 할 수있다
+
+                // 2. 예약시스템 이용 (PriorityQueue)
+                // 유니티에서도 틱을 이용하는게 아니라 코루틴을 가장 많이 쓴다
+                // 서버코어의 PriorityQueue를 확인 LogN의 속도로 가능하며 다 체크하지 않는다
+                JobTimer.Instance.Flush();
             }
 
         }
