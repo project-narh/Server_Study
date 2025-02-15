@@ -78,6 +78,7 @@ ID로 1 이동 2 채팅 이런식으로 하는 방법이 있을 수 있다
     class Program
     {
         static Listener _listener = new Listener();
+        public static GameRoom Room = new GameRoom();
 
         static void Main(string[] args)
         {
@@ -87,9 +88,11 @@ ID로 1 이동 2 채팅 이런식으로 하는 방법이 있을 수 있다
             IPHostEntry ipHost = Dns.GetHostEntry(host);
             IPAddress ipAddr = ipHost.AddressList[0];
             IPEndPoint endPoint = new IPEndPoint(ipAddr, 7777);
+            
+            //중간에 세션 매니저를 만들고 관리하게 해야 관리 용이
+            _listener.Init(endPoint, () => { return SessionManager.Instance.Generate(); }); // 람다로 간단히 처리
 
-            _listener.Init(endPoint, () => { return new ClientSession(); }); // 람다로 간단히 처리
-
+            _
             Console.WriteLine("Listening...");
 
             //영업을 한 번만 하고 마는게 아니니까 무한 루프

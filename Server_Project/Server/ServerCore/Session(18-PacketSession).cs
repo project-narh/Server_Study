@@ -88,6 +88,15 @@ namespace ServerCore
         public abstract void OnSend(int numOfBytes);
         public abstract void OnDisconnected(EndPoint endPoint);
 
+        void Clear()
+        {
+            lock(_lock)
+            {
+                _sendQueue.Clear();
+                _Pendinglist.Clear();
+            }
+        }
+
         public void Start(Socket socket)
         {
             _socket = socket;
@@ -161,6 +170,7 @@ namespace ServerCore
             OnDisconnected(_socket.RemoteEndPoint);
             _socket.Shutdown(SocketShutdown.Both);
             _socket.Close();
+            Clear();
         }
         //동시다발적 혹은 동시에 2개가 실행이 되면?
 
@@ -168,6 +178,8 @@ namespace ServerCore
         // 이대로 사용해도 무관하나 좀 더 최적화하기 위해선 해당 메소드를 건드려야한다 
         void Registersend() // 어차피 전역으로 선언되었기 때문에 매개변수로 넣어줄 필요가 없다
         {
+            if (_disconnected == 1) return;
+
             /*_pending = true;
             byte[] buff = _sendQueue.Dequeue();
             _sendArgs.SetBuffer(buff, 0, buff.Length);*/
@@ -201,9 +213,16 @@ namespace ServerCore
             }
             _sendArgs.BufferList = _Pendinglist;
 
-
-            bool pendig = _socket.SendAsync(_sendArgs);
-            if (!pendig) OnSendCompleted(null, _sendArgs);
+            try
+            {
+                bool pendig = _socket.SendAsync(_sendArgs);
+                if (!pendig) OnSendCompleted(null, _sendArgs);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"RegisterSend Failed : {ex}");
+            }
+            
         }
 
         void OnSendCompleted(object sender, SocketAsyncEventArgs args)
@@ -255,13 +274,20 @@ namespace ServerCore
         }*/
         void RegisterRecv()
         {
+            if (_disconnected == 1) return;
             //이제 여기에서 현재 사용할 수 있는 버퍼를 찝어줘야 한다
             _recvBuffer.Clean();
             ArraySegment<byte> segment = _recvBuffer.WriteSegment;
             _recvArgs.SetBuffer(segment.Array, segment.Offset, segment.Count);
-
-            bool pending = _socket.ReceiveAsync(_recvArgs);
-            if (!pending) OnRecvCompleted(null, _recvArgs);
+            try
+            {
+                bool pending = _socket.ReceiveAsync(_recvArgs);
+                if (!pending) OnRecvCompleted(null, _recvArgs);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"RegisterRecv Failed {ex}");
+            }
         }
 
         void OnRecvCompleted(object sender, SocketAsyncEventArgs args)

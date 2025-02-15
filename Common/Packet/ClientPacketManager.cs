@@ -24,8 +24,8 @@ class PacketManager
     {
         //패킷을 받는도중 Register를 하면 문제 발생 (먼저 등록하고 패킷이 들어오면 문제가 안된다)
 
-        _onRecv.Add((ushort)PacketID.S_Test, MakePacket<S_Test>);
-        _handler.Add((ushort)PacketID.S_Test, PacketHandler.S_TestHandler);
+        _onRecv.Add((ushort)PacketID.S_Chat, MakePacket<S_Chat>);
+        _handler.Add((ushort)PacketID.S_Chat, PacketHandler.S_ChatHandler);
 
     }
 

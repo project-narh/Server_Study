@@ -196,6 +196,9 @@ namespace Server
     
     class ClientSession : PacketSession //session > PacketSession
     {
+        public int SessionId { get; set; }
+        public GameRoom Room { get; set; }
+
         public override void OnConnected(EndPoint endPoint)
         {
             Console.WriteLine($"OnConnected {endPoint}");
@@ -210,12 +213,20 @@ namespace Server
             //ArraySegment<byte> sendBuff = SendBufferHelper.Close(buffer.Length + buffer2.Length); // 버퍼를 닫으면서 사용한 크기 전달
             //                                                                                      //이때 sendBuff가 보내줘야하는 버퍼가 만들어진다.
             //Send(sendBuff);*/
-            Thread.Sleep(5000); // 5초
-            Disconnect();
+            //강제로 채팅방에 입장시킨다(원래 바로 입장이 아닌 리소스 로딩이 끝나고 해야 하는게 맞다)
+
+            Program.Room.Enter(this);
         }
 
         public override void OnDisconnected(EndPoint endPoint)
         {
+            SessionManager.Instance.Remove(this);
+            if(Room != null)
+            {
+                Room.Leave(this);
+                Room = null;
+            }
+
             Console.WriteLine($"OnDisconnected {endPoint}");
         }
 

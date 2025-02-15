@@ -1,19 +1,10 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?> 
 <PDL>
-	<Packet name="C_PlayerInfoReq">
-		<sbyte name ="testByte"/>
-		<long name="playerId"/>
-		<string name="name"/>
-		<list name="skill">
-			<int name="id"/>
-			<short name="level"/>
-			<float name ="duration"/>
-			<list name="attribute">
-				<int name="att"/>
-			</list>
-		</list>
+	<Packet name="C_Chat">
+		<String name="chat"/>
 	</Packet>
-	<packet name="S_Test">
-		<int name="testInt"/>
-	</packet>
+	<Packet name="S_Chat">
+		<int name="playerId"/>
+		<String name="chat"/>
+	</Packet>
 </PDL>
