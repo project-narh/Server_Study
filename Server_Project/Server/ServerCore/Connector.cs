@@ -22,17 +22,20 @@ namespace ServerCore
 
         Func<Session> _sessionFactory;
 
-        public void Connect(IPEndPoint endPoint, Func<Session> sessionFactory)
+        public void Connect(IPEndPoint endPoint, Func<Session> sessionFactory, int count = 1) // 소캣을 만들고 하는 작업을 한번만 해서 여러번 하도록 카운트 추가
         {
-            Socket socket = new Socket(endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-            SocketAsyncEventArgs args = new SocketAsyncEventArgs();
-            _sessionFactory = sessionFactory;
-            args.Completed += OnConnectCompleted;
-            args.RemoteEndPoint = endPoint;
-            //이번에는 유저토큰 사용
-            args.UserToken = socket;
-            //이번에는 이벤트를 왜 전역으로 선언안하냐면 Connect를 한개가 아니라 여러명일 수 있기 때문에
-            RegisterConnect(args);
+            for (int i = 0; i < count; i++)
+            {
+                Socket socket = new Socket(endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+                SocketAsyncEventArgs args = new SocketAsyncEventArgs();
+                _sessionFactory = sessionFactory;
+                args.Completed += OnConnectCompleted;
+                args.RemoteEndPoint = endPoint;
+                //이번에는 유저토큰 사용
+                args.UserToken = socket;
+                //이번에는 이벤트를 왜 전역으로 선언안하냐면 Connect를 한개가 아니라 여러명일 수 있기 때문에
+                RegisterConnect(args);
+            }
 
         }
 

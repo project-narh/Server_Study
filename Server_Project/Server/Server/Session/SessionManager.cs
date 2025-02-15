@@ -46,6 +46,7 @@ namespace Server
             {
                 _sessions.Remove(session.SessionId);
             }
+        }
 
     }
 }

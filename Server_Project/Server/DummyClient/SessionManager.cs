@@ -1,0 +1,42 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace DummyClient
+{
+    internal class SessionManager // ID를 관리하진 않는다(그건 서버에서)
+    {
+        static SessionManager _session = new SessionManager();
+        public static SessionManager Instance { get { return _session; } }
+
+        List<ServerSession> _sessions = new List<ServerSession>();
+        object _lock = new object();
+
+        public void SendForEach()
+        {
+            lock (_lock)
+            {
+                foreach (ServerSession session in _sessions)
+                {
+                    C_Chat chatPacket = new C_Chat();
+                    chatPacket.chat = $"Hello Server !";
+                    ArraySegment<byte> segemt = chatPacket.Write();
+
+                    session.Send(segemt);
+                }
+            }
+        }
+
+        public ServerSession Generate()
+        {
+            lock (_lock)
+            {
+                ServerSession session = new ServerSession();
+                _sessions.Add(session);
+                return session;
+            }
+        }
+    }
+}
