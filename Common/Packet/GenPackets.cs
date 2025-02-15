@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Net;
 using System.Text;
 
- public enum PacketID // 지금은 이렇게 하드코딩 하지만 나중에는 자도오하
+ public enum PacketID // 지금은 이렇게 하드코딩 하지만 나중에는 자동화
 {
     PlayerInfoReq = 1,
 	Test = 2,
@@ -14,7 +14,7 @@ using System.Text;
 
 class PlayerInfoReq 
 {
-    public byte testByte;
+    public sbyte testByte;
 	
 	
 	public long playerId;
@@ -24,7 +24,7 @@ class PlayerInfoReq
 	
 	
 	
-	public struct Skill
+	public class Skill
 	{
 	public int id;
 		
@@ -36,7 +36,7 @@ class PlayerInfoReq
 		
 		
 		
-		public struct Attribute
+		public class Attribute
 		{
 		public int att;
 		
@@ -107,9 +107,9 @@ class PlayerInfoReq
 
         count += sizeof(ushort);
         count += sizeof(ushort);
-        this.testByte = (byte)segment.Array[segment.Offset + count];
+        this.testByte = (sbyte)segment.Array[segment.Offset + count];
 		
-count += sizeof(byte);this.playerId = BitConverter.ToInt64(s.Slice(count, s.Length - count));
+count += sizeof(sbyte);this.playerId = BitConverter.ToInt64(s.Slice(count, s.Length - count));
 		
 count += sizeof(long);ushort nameLen = BitConverter.ToUInt16(s.Slice(count, s.Length - count));
 		
@@ -149,7 +149,7 @@ for (int i = 0; i < skillLen; i++)
         success &= BitConverter.TryWriteBytes(s.Slice(count, s.Length - count), (ushort)PacketID.PlayerInfoReq);
         count += sizeof(ushort);
         segment.Array[segment.Offset + count] = (byte)this.testByte;
-		count += sizeof(byte);success &= BitConverter.TryWriteBytes(s.Slice(count, s.Length - count), this.playerId);
+		count += sizeof(sbyte);success &= BitConverter.TryWriteBytes(s.Slice(count, s.Length - count), this.playerId);
 		count += sizeof(long);ushort nameLen = (ushort)Encoding.Unicode.GetBytes(this.name, 0, this.name.Length, segment.Array, segment.Offset + count + sizeof(ushort));
 		success &= BitConverter.TryWriteBytes(s.Slice(count, s.Length - count), nameLen);
 		count += sizeof(ushort);

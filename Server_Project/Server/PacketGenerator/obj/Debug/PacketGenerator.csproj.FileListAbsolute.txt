@@ -1,0 +1,15 @@
+D:\Git\Server_Study\Server_Project\Server\PacketGenerator\obj\Debug\PacketGenerator.GeneratedMSBuildEditorConfig.editorconfig
+D:\Git\Server_Study\Server_Project\Server\PacketGenerator\obj\Debug\PacketGenerator.AssemblyInfoInputs.cache
+D:\Git\Server_Study\Server_Project\Server\PacketGenerator\obj\Debug\PacketGenerator.AssemblyInfo.cs
+D:\Git\Server_Study\Server_Project\Server\PacketGenerator\obj\Debug\PacketGenerator.csproj.CoreCompileInputs.cache
+D:\Git\Server_Study\Server_Project\Server\PacketGenerator\obj\Debug\PacketGenerator.sourcelink.json
+D:\Git\Server_Study\Server_Project\Server\PacketGenerator\obj\Debug\PacketGenerator.dll
+D:\Git\Server_Study\Server_Project\Server\PacketGenerator\obj\Debug\refint\PacketGenerator.dll
+D:\Git\Server_Study\Server_Project\Server\PacketGenerator\obj\Debug\PacketGenerator.pdb
+D:\Git\Server_Study\Server_Project\Server\PacketGenerator\obj\Debug\PacketGenerator.genruntimeconfig.cache
+D:\Git\Server_Study\Server_Project\Server\PacketGenerator\obj\Debug\ref\PacketGenerator.dll
+D:\Git\Server_Study\Server_Project\Server\PacketGenerator\bin\PacketGenerator.exe
+D:\Git\Server_Study\Server_Project\Server\PacketGenerator\bin\PacketGenerator.deps.json
+D:\Git\Server_Study\Server_Project\Server\PacketGenerator\bin\PacketGenerator.runtimeconfig.json
+D:\Git\Server_Study\Server_Project\Server\PacketGenerator\bin\PacketGenerator.dll
+D:\Git\Server_Study\Server_Project\Server\PacketGenerator\bin\PacketGenerator.pdb

@@ -12,13 +12,18 @@ namespace PacketGenerator
         static string packetEnums; // 패킷을 몇개 처리했는지 기억해야 해서 위 변수
         static void Main(string[] args)
         {
+            string pdlPath = "../PDL.xml";
+
             XmlReaderSettings settings = new XmlReaderSettings() // XML 동작방식 설정
             {
                 IgnoreComments = true, // 주석 무시
                 IgnoreWhitespace = true, // 공백 무시
 
             };
-            using (XmlReader r = XmlReader.Create("PDL.xml", settings)) //경로 지정해줘야함 실행파일이 있는 경로를 기준으로 실행됨
+            if(args.Length >= 1)
+                pdlPath = args[0];
+
+            using (XmlReader r = XmlReader.Create(pdlPath, settings)) //경로 지정해줘야함 실행파일이 있는 경로를 기준으로 실행됨 (이제 인자로 받을 수 있게)
             {
                 r.MoveToContent();
 

@@ -16,7 +16,7 @@ using System.Collections.Generic;
 using System.Net;
 using System.Text;
 
- public enum PacketID // 지금은 이렇게 하드코딩 하지만 나중에는 자도오하
+ public enum PacketID // 지금은 이렇게 하드코딩 하지만 나중에는 자동화
 {{
     {0}
 }}
@@ -87,7 +87,7 @@ using System.Text;
         // {4} 멤버 변수 Write
         public static string memberListFormat =
 @"
-public struct {0}
+public class {0}
 {{
 {2}
 
