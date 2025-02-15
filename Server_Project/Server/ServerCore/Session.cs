@@ -23,6 +23,8 @@ namespace ServerCore
         public sealed override int OnRecv(ArraySegment<byte> buffer) // sealed는 다른 클래스에서 패킷세션을 상속받아서 OnRecv를 오버라이드하려면 에러가 뜬다
         {
             int processLen = 0; // 몇바이트를 처리했는지
+            int packetCount = 0; // 패킷 몇개 처리했느지
+
             while (true) // 패킷을 계속 처리할 수 있을대 까지 처리
             {
                 if (buffer.Count < HeaderSize) //2보다 작으면 말이 안된다 왜냐 ushort로 받기 때문 (최소한 헤더는 파싱할 수 있는지 확인)
@@ -35,12 +37,16 @@ namespace ServerCore
                 //여기까지 왔다면 패킷을 조집하는게 가능하다
                 OnRecvPacket(new ArraySegment<byte>(buffer.Array, buffer.Offset, dataSize));//여기에 들어갈건 패킷을 만들어서 보내줘도 되고 해당 영역을 찝어줘도 된다 지금할건 패킷 영역 찝어주기
                                                                                             //패킷의 범위를 보내주는거야
+                packetCount++;
                 processLen += dataSize;
 
                 //데이터가 패킷 세트 하나가 끝난다면 다른 세트를 해줘야 한다 이동해야 하니
                 buffer = new ArraySegment<byte>(buffer.Array, buffer.Offset + dataSize, buffer.Count - dataSize); // 힙 영역 아님 스택이라 상관없음
                 //buffer.Slice(); 이런 함수로 잘라서 보내줘도 된다
             }
+            if (packetCount > 1)
+                Console.WriteLine($"패킷 모아보내기 : {packetCount}");
+
             return processLen;
         }
 
@@ -74,7 +80,8 @@ namespace ServerCore
         int _disconnected = 0;
 
         //리시브 버퍼 추가
-        RecvBuffer _recvBuffer = new RecvBuffer(1024);
+        //패킷을 100개씩 보내는데 막상 보면 100씩 안가는거 같다 이는 버퍼 크기 때문일 가능성이 크다 현재 1021라서 손실이를 65535로 변경
+        RecvBuffer _recvBuffer = new RecvBuffer(65535);
 
         SocketAsyncEventArgs _recvArgs = new SocketAsyncEventArgs(); // _sendArgs처럼 빼도 무관 다만 C++서버는 이런식
         SocketAsyncEventArgs _sendArgs = new SocketAsyncEventArgs(); // 재사용 해야지 계속 생성하는건 말이 안되고 의미도 없어
@@ -159,6 +166,25 @@ namespace ServerCore
                 _sendQueue.Enqueue(sendBuff); // 큐도 변경
                 //즉 리스트를 따로 관리하고 있으니 이것도 이렇게 리스트로 확인이 가능
                 if (_Pendinglist.Count == 0 ) Registersend(); // 이대로 사용해도 무관하나 좀 더 최적화하기 위해선 해당 메소드를 건드려야한다 
+
+                //만일 이걸 이렇게 안하고 어느정도 모이면 보내게 한다면 패킷 모아보내기를 엔진에서 할 수 있다
+
+            }
+        }
+
+        public void Send(List<ArraySegment<byte>> sendBuffList)
+        {
+            if (sendBuffList.Count == 0) return; //문제 생길거 방지
+
+            lock (_lock) //락을 잡아 한번에 한명씩만
+            {
+                foreach(ArraySegment<byte> sendBuff in sendBuffList)
+                    _sendQueue.Enqueue(sendBuff); // 큐도 변경
+
+                //즉 리스트를 따로 관리하고 있으니 이것도 이렇게 리스트로 확인이 가능
+                if (_Pendinglist.Count == 0) Registersend(); // 이대로 사용해도 무관하나 좀 더 최적화하기 위해선 해당 메소드를 건드려야한다 
+
+                //만일 이걸 이렇게 안하고 어느정도 모이면 보내게 한다면 패킷 모아보내기를 엔진에서 할 수 있다
 
             }
         }

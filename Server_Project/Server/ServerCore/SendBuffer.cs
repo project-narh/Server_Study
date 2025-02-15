@@ -39,7 +39,8 @@ array.copy(buffer2, 0, sendbuffer, buffer.Length, buffer2.Length);_
         public static ThreadLocal<SendBuffer> CurrentBuffer = new ThreadLocal<SendBuffer>(() => { return null; }); //전역은 전역인데 나만의 쓰레드에서만 사용할 수 있다
         
         //쓰레드마다 청크를 크게 나누고 이를 쪼개서 사용한다.
-        public static int chunkSize { get; set; } = 4096 * 100; // 
+        //SendBuffer도 4096에서 65535로 변경
+        public static int chunkSize { get; set; } = 65535 * 100; // 
 
         public static ArraySegment<byte> Open ( int reserveSize )
         {

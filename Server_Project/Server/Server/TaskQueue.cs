@@ -13,6 +13,7 @@ namespace Server
         void Execute();
     }
     //실행이 필요한거를 수동으로 만들어준다 (너무 불편하다는 단점이 존재 2010년도 이전에는 이렇게 만들었음 람다가 생긴지 얼마 안됨)
+    //다만 람다를 쓰면 생기는 문제점도 있다
     class BroadcastTask : ITask
     {
         GameRoom _room;

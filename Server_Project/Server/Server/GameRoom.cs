@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 
 namespace Server
 {
+    //이번에는 컨텐츠에서 패킷모아보내기 진행 (엔진에서 하는건 서버코어-세션-send를 바로 보내는게 아니라 어느정도 모와서 보내면 된다)
     internal class GameRoom : IJobQueue
     {
         // 세션은 사람이고 게임룸이 방이라고 생각하면 될거 같다
@@ -14,6 +15,8 @@ namespace Server
         List<ClientSession> _sessions = new List<ClientSession>();
         object _lock = new object();
         JobQueue _jobQueue = new JobQueue(); // 행동들을 job으로 넣는 방식으로
+        //패킷 모아보내기 위한 리스트
+        List<ArraySegment<byte>> _pendingList = new List<ArraySegment<byte>>();
 
         //누가 잡을 가지고 있어야 할까?
         //씬 단위가 있으면 씬마다 배치 리니지나 와우같이 씬리스인 경우는 모든 사물에 넣어야 한다(존단위로 하면 애매함)
@@ -40,11 +43,30 @@ namespace Server
             //N제곱의 시간복잡도(주변 모두에게 보내기 때문에)
             //주변에 100명 있으면 100명 모두에게 보내기 때문에 그래서 테스트 해보면 같은 숫자가 10개씩 한번에 보내짐
             //이 보내는 공간 잡는게 힘들다...
-            foreach(ClientSession s in _sessions)
-            {
-                s.Send(segment);
-            }
 
+            //foreach(ClientSession s in _sessions)
+            //{
+            //    s.Send(segment);
+            //}
+
+            _pendingList.Add(segment); // 위처럼 각각 다 보내는게 아니라 보내야 할 패킷을 모은다.
+            //그러면 모은경우 누군가는 보내긴 해야 한다.
+
+        }
+
+
+        //클라이언트 요청만이 아닌 몬스터가 움직이거나 길찾기, 스킬 이런것들도 게임룸에 넣어야 한다
+        //실행하기 위한 마스터가 필요하다
+        //Main에서 클라이언트의 요청을 담은 Room을 Flush하는 역할을 했는데 서버도 마찬가지로 Flush해 갱신해주는 작업이 필요하다.
+        //유저들이 보낸 패킷 뿐만 아니라 AI등의 작업도 잡큐 _pendingList에 넣어야 한다.
+        public void Flush()
+        {
+            foreach (ClientSession s in _sessions)
+            {
+                s.Send(_pendingList);
+            }
+            Console.WriteLine($"Flushed {_pendingList.Count} items");
+            _pendingList.Clear(); // 보냈으니 정리
         }
 
         public void Enter(ClientSession session) // 동시다발적으로 실행된다는걸 가정하고 해야한다

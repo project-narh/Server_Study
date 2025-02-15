@@ -16,7 +16,7 @@ class PacketHandler
         ServerSession serverSession = session as ServerSession;
 
         //if (chatPacket.playerId == 1) // 10개 다 실행하면 로그가 너무 많아져서
-            Console.WriteLine(chatPacket.chat);
+            //Console.WriteLine(chatPacket.chat);
 
     }
 }
