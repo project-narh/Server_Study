@@ -21,6 +21,13 @@ using System.Text;
     {0}
 }}
 
+interface IPacket
+{{ 
+	ushort Protocol {{ get; }}
+	void Read(ArraySegment<byte> segment);
+	ArraySegment<byte> Write();
+}}
+
 {1}
 ";
 
@@ -34,9 +41,11 @@ using System.Text;
 
         // 여러줄에 걸쳐서 문자열을 정의해 주고 싶을 땐 @를 붙이면 된다. 
         public static string packetFormat =
-@"class {0} 
+@"class {0} : IPacket
 {{
     {1}     
+
+	public ushort Protocol {{ get {{ return (ushort) PacketID.{0}; }} }}
 
     public void Read(ArraySegment<byte> segment)
     {{

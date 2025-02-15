@@ -155,9 +155,9 @@ namespace PacketGenerator
 
                 }
             }
-            memeberCode = memeberCode.Replace("\n", "\n\t");
-            readCode = readCode.Replace("\r", "\n\t\t"); // 코드 정리
-            writeCode = writeCode.Replace("\n", "\n\t\t");
+            memeberCode = memeberCode.Replace("\\n", "\\n\\t");
+            readCode = readCode.Replace("\\r", "\\n\\t\\t"); // 코드 정리
+            writeCode = writeCode.Replace("\\n", "\\n\\t\\t");
             return new Tuple<string, string, string>(memeberCode, readCode, writeCode);
 
         }

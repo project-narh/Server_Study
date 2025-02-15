@@ -26,9 +26,6 @@ namespace DummyClient
 
             ArraySegment<byte> s = packet.Write();
             if (s != null) Send(s);
-
-
-           
         }
 
         public override void OnDisconnected(EndPoint endPoint)

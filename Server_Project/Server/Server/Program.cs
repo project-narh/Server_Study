@@ -10,11 +10,11 @@ using ServerCore; // 추가 서버 코어를 라이브러리화하였기 때문�
 
 namespace Server
 {
-    /*패킷을 구분하는 방법은 뭘까?
+/*    패킷을 구분하는 방법은 뭘까?
 ID로 1 이동 2 채팅 이런식으로 하는 방법이 있을 수 있다
 
 다만 문제는 경우에 따라 유동적으로 사이즈가 달라질 수 있다는 점이다
-그래서 첫 인자로 size 두번째로 ID를 넘겨주는 경우가 대다수이다. (int short 둘 중 ushort로 충분히 사용하긴 한다)*//*
+그래서 첫 인자로 size 두번째로 ID를 넘겨주는 경우가 대다수이다. (int short 둘 중 ushort로 충분히 사용하긴 한다)
     class Packet
     {
         public ushort size;
@@ -60,12 +60,12 @@ ID로 1 이동 2 채팅 이런식으로 하는 방법이 있을 수 있다
         }
 
         //sealed로 막아줘서 이제 사용 X
-        *//*        public override int OnRecv(ArraySegment<byte> buffer) // 현재 하는 작업은 엔진과 컨텐츠를 분리하는 작업
+                public override int OnRecv(ArraySegment<byte> buffer) // 현재 하는 작업은 엔진과 컨텐츠를 분리하는 작업
                 {
                     string recvData = Encoding.UTF8.GetString(buffer.Array, buffer.Offset, buffer.Count); // 어디서부터 시작하냐 Offset
                     Console.WriteLine($"[From client]{recvData}");
                     return buffer.Count;
-                }*//*
+                }
 
 
         public override void OnSend(int numOfBytes)
@@ -81,6 +81,8 @@ ID로 1 이동 2 채팅 이런식으로 하는 방법이 있을 수 있다
 
         static void Main(string[] args)
         {
+            PacketManager.Instance.Register();
+
             string host = Dns.GetHostName();
             IPHostEntry ipHost = Dns.GetHostEntry(host);
             IPAddress ipAddr = ipHost.AddressList[0];

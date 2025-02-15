@@ -13,3 +13,7 @@ D:\Git\Server_Study\Server_Project\Server\Server\obj\Debug\net8.0\refint\Server.
 D:\Git\Server_Study\Server_Project\Server\Server\obj\Debug\net8.0\Server.pdb
 D:\Git\Server_Study\Server_Project\Server\Server\obj\Debug\net8.0\Server.genruntimeconfig.cache
 D:\Git\Server_Study\Server_Project\Server\Server\obj\Debug\net8.0\ref\Server.dll
+D:\Git\Server_Study\Server_Project\Server\Server\bin\Debug\net8.0\ServerCore.dll
+D:\Git\Server_Study\Server_Project\Server\Server\bin\Debug\net8.0\ServerCore.pdb
+D:\Git\Server_Study\Server_Project\Server\Server\obj\Debug\net8.0\Server.csproj.AssemblyReference.cache
+D:\Git\Server_Study\Server_Project\Server\Server\obj\Debug\net8.0\Server.csproj.Up2Date

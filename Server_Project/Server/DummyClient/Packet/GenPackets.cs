@@ -12,7 +12,14 @@ using System.Text;
 	
 }
 
-class PlayerInfoReq 
+interface IPacket
+{ 
+	ushort Protocol { get; }
+	void Read(ArraySegment<byte> segment);
+	ArraySegment<byte> Write();
+}
+
+class PlayerInfoReq : IPacket
 {
     public sbyte testByte;
 	
@@ -24,7 +31,7 @@ class PlayerInfoReq
 	
 	
 	
-	public struct Skill
+	public class Skill
 	{
 	public int id;
 		
@@ -36,7 +43,7 @@ class PlayerInfoReq
 		
 		
 		
-		public struct Attribute
+		public class Attribute
 		{
 		public int att;
 		
@@ -98,6 +105,8 @@ class PlayerInfoReq
 	}
 	}
 	public List<Skill> skills = new List<Skill>();     
+
+	public ushort Protocol { get { return (ushort) PacketID.PlayerInfoReq; } }
 
     public void Read(ArraySegment<byte> segment)
     {
@@ -163,9 +172,11 @@ for (int i = 0; i < skillLen; i++)
         return SendBufferHelper.Close(count);
     }
 }
-class Test 
+class Test : IPacket
 {
     public int testInt;     
+
+	public ushort Protocol { get { return (ushort) PacketID.Test; } }
 
     public void Read(ArraySegment<byte> segment)
     {
