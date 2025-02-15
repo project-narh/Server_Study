@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?> 
 <PDL>
-	<Packet name="PlayerInfoReq">
+	<Packet name="C_PlayerInfoReq">
 		<sbyte name ="testByte"/>
 		<long name="playerId"/>
 		<string name="name"/>
@@ -13,7 +13,7 @@
 			</list>
 		</list>
 	</Packet>
-	<packet name="Test">
+	<packet name="S_Test">
 		<int name="testInt"/>
 	</packet>
 </PDL>

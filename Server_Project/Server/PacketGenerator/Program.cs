@@ -10,6 +10,10 @@ namespace PacketGenerator
         static string genPackets; // 만들어지는 패킷들을 저장한다
         static ushort packetId;
         static string packetEnums; // 패킷을 몇개 처리했는지 기억해야 해서 위 변수
+
+        static string clientRegister; // 클라이언트에서 호출하는 레지스터
+        static string serverRegister; // 서버에서 호출하는 레지스터
+
         static void Main(string[] args)
         {
             string pdlPath = "../PDL.xml";
@@ -35,6 +39,10 @@ namespace PacketGenerator
                 }
                 string fileText = string.Format(PacketFormat.fileFormat,packetEnums,genPackets);
                 File.WriteAllText("GenPackets.cs", fileText);
+                string clientManagerText = string.Format(PacketFormat.managerFormat, clientRegister);
+                File.WriteAllText("ClientPacketManager.cs", clientManagerText);
+                string serverManagerText = string.Format(PacketFormat.managerFormat, serverRegister);
+                File.WriteAllText("ServerPacketManager.cs", serverManagerText);
             }
         }
         static void ParsePacket(XmlReader r) // 하나의 패킷 단위니 여기서 Enum도 진행
@@ -66,26 +74,30 @@ namespace PacketGenerator
                 return;
             }
 
-/*            Console.WriteLine($"packetName: {packetName}");
-            Console.WriteLine($"t.Item1: {t.Item1}");
-            Console.WriteLine($"t.Item2: {t.Item2}");
-            Console.WriteLine($"t.Item3: {t.Item3}");*/
-
+            /*            Console.WriteLine($"packetName: {packetName}");
+                        Console.WriteLine($"t.Item1: {t.Item1}");
+                        Console.WriteLine($"t.Item2: {t.Item2}");
+                        Console.WriteLine($"t.Item3: {t.Item3}");*/
             try
             {
                 genPackets += string.Format(PacketFormat.packetFormat, packetName, t.Item1, t.Item2, t.Item3);
                 packetEnums += string.Format(PacketFormat.packetEnumFormat, packetName, ++packetId) + Environment.NewLine + "\t";
+
+                if(packetName.StartsWith("S_") || packetName.StartsWith("s_"))
+                    clientRegister += string.Format(PacketFormat.mangerRegisterFormat, packetName) + Environment.NewLine;
+                else 
+                    serverRegister += string.Format(PacketFormat.mangerRegisterFormat, packetName) + Environment.NewLine;
             }
             catch (FormatException ex)
             {
-                Console.WriteLine($"FormatException in packet: {packetName}");
-                Console.WriteLine($"Error Details: {ex.Message}================");
+                //Console.WriteLine($"FormatException in packet: {packetName}");
+                //Console.WriteLine($"Error Details: {ex.Message}================");
 
-                Console.WriteLine($"FormatException in packet: {packetName}");
-                Console.WriteLine($"packetName: {packetName}");
-                Console.WriteLine($"t.Item1: {t.Item1}");
-                Console.WriteLine($"t.Item2: {t.Item2}");
-                Console.WriteLine($"t.Item3: {t.Item3}");
+                //Console.WriteLine($"FormatException in packet: {packetName}");
+                //Console.WriteLine($"packetName: {packetName}");
+                //Console.WriteLine($"t.Item1: {t.Item1}");
+                //Console.WriteLine($"t.Item2: {t.Item2}");
+                //Console.WriteLine($"t.Item3: {t.Item3}");
                 throw;
             }
         }
@@ -118,7 +130,7 @@ namespace PacketGenerator
 
                 string memberType = r.Name.ToLower();
 
-                Console.WriteLine($"{memberName}  {memberType}");
+                //Console.WriteLine($"{memberName}  {memberType}");
                 switch (memberType)
                 {
                     //byte와 sbyte 추가
@@ -165,7 +177,7 @@ namespace PacketGenerator
         public static Tuple<string, string, string> ParseList(XmlReader r)
         {
             string listName = r["name"];
-            Console.WriteLine(listName);
+            //Console.WriteLine(listName);
             if(string.IsNullOrEmpty(listName))
             {
                 Console.WriteLine("List without name");
@@ -178,11 +190,6 @@ namespace PacketGenerator
                  t.Item1,
                  t.Item2,
                  t.Item3);
-            Console.WriteLine(FirstCharToUpper(listName));
-            Console.WriteLine(FirstCharToLower(listName));
-            Console.WriteLine(t.Item1);
-            Console.WriteLine(t.Item2);
-            Console.WriteLine(t.Item3);
 
             string readCode = string.Format(PacketFormat.readListFormat,
                 FirstCharToUpper(listName),

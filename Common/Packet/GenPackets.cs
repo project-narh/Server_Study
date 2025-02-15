@@ -7,8 +7,8 @@ using System.Text;
 
  public enum PacketID // 지금은 이렇게 하드코딩 하지만 나중에는 자동화
 {
-    PlayerInfoReq = 1,
-	Test = 2,
+    C_PlayerInfoReq = 1,
+	S_Test = 2,
 	
 }
 
@@ -19,7 +19,7 @@ interface IPacket
 	ArraySegment<byte> Write();
 }
 
-class PlayerInfoReq : IPacket
+class C_PlayerInfoReq : IPacket
 {
     public sbyte testByte;
 
@@ -94,7 +94,7 @@ success &= attribute.Write(s, ref count);
 }
 public List<Skill> skills = new List<Skill>();     
 
-	public ushort Protocol { get { return (ushort) PacketID.PlayerInfoReq; } }
+	public ushort Protocol { get { return (ushort) PacketID.C_PlayerInfoReq; } }
 
     public void Read(ArraySegment<byte> segment)
     {
@@ -130,7 +130,7 @@ for (int i = 0; i < skillLen; i++)
 
         count += sizeof(ushort);
 
-        success &= BitConverter.TryWriteBytes(s.Slice(count, s.Length - count), (ushort)PacketID.PlayerInfoReq);
+        success &= BitConverter.TryWriteBytes(s.Slice(count, s.Length - count), (ushort)PacketID.C_PlayerInfoReq);
         count += sizeof(ushort);
         segment.Array[segment.Offset + count] = (byte)this.testByte;
 count += sizeof(sbyte);success &= BitConverter.TryWriteBytes(s.Slice(count, s.Length - count), this.playerId);
@@ -147,11 +147,11 @@ success &= skill.Write(s, ref count);
         return SendBufferHelper.Close(count);
     }
 }
-class Test : IPacket
+class S_Test : IPacket
 {
     public int testInt;     
 
-	public ushort Protocol { get { return (ushort) PacketID.Test; } }
+	public ushort Protocol { get { return (ushort) PacketID.S_Test; } }
 
     public void Read(ArraySegment<byte> segment)
     {
@@ -175,7 +175,7 @@ count += sizeof(int);
 
         count += sizeof(ushort);
 
-        success &= BitConverter.TryWriteBytes(s.Slice(count, s.Length - count), (ushort)PacketID.Test);
+        success &= BitConverter.TryWriteBytes(s.Slice(count, s.Length - count), (ushort)PacketID.S_Test);
         count += sizeof(ushort);
         success &= BitConverter.TryWriteBytes(s.Slice(count, s.Length - count), this.testInt);
 count += sizeof(int);
