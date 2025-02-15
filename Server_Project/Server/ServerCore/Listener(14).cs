@@ -15,16 +15,22 @@ namespace ServerCore
         Socket _listenSocket;
         Func<Session> _sessionFactory; // 연결이 완료되었음을 알려주기 위한 액션
 
-        public void Init(IPEndPoint endPoint, Func<Session> sessionFactory)
+        public void Init(IPEndPoint endPoint, Func<Session> sessionFactory, int register = 10, int backlog = 100)
         {
             _listenSocket = new Socket(endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp); // TCP로 통신 (문지기가 들고 있는 휴대폰)
             _sessionFactory += sessionFactory;
             _listenSocket.Bind(endPoint);
-            _listenSocket.Listen(10);
+            _listenSocket.Listen(backlog); // backlog - 최대 대기수
             //문지기가 하나라서 사람이 많으면 더 많이 만들면 된다.
-            SocketAsyncEventArgs args = new SocketAsyncEventArgs();//한번만들면 계속 재사용 가능
-            args.Completed += new EventHandler<SocketAsyncEventArgs>(OnAcceptCompleted); // 델리게이트로 이벤트 핸들러 등록                                                                       //최초로 낚시대를 던진것
-            RegisterAccept(args);
+            //500명이 동시에 접근한다면 그중 에러가 많이 뜰거야 왜냐면 백로그는 10개이기에
+
+            //문지기 역할로 한개지만 이를 10개로 수정 (동시다발적을 위해서)
+            for (int i = 0; i < register; i++)
+            {
+                SocketAsyncEventArgs args = new SocketAsyncEventArgs();//한번만들면 계속 재사용 가능
+                args.Completed += new EventHandler<SocketAsyncEventArgs>(OnAcceptCompleted); // 델리게이트로 이벤트 핸들러 등록                                                                       //최초로 낚시대를 던진것
+                RegisterAccept(args);
+            }
             /*for(int i = 0; i < 10; i++)
             {
                 SocketAsyncEventArgs args = new SocketAsyncEventArgs();//한번만들면 계속 재사용 가능

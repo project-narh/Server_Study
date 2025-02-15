@@ -15,6 +15,9 @@ namespace Server
         object _lock = new object();
         JobQueue _jobQueue = new JobQueue(); // 행동들을 job으로 넣는 방식으로
 
+        //누가 잡을 가지고 있어야 할까?
+        //씬 단위가 있으면 씬마다 배치 리니지나 와우같이 씬리스인 경우는 모든 사물에 넣어야 한다(존단위로 하면 애매함)
+
         public void Push(Action job)
         {
             _jobQueue.Push(job);
