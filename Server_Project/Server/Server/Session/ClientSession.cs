@@ -215,7 +215,8 @@ namespace Server
             //Send(sendBuff);*/
             //강제로 채팅방에 입장시킨다(원래 바로 입장이 아닌 리소스 로딩이 끝나고 해야 하는게 맞다)
 
-            Program.Room.Enter(this);
+            //룸에 직접 접근했지만 이제 그러면 안된다
+            Program.Room.Push(() => Program.Room.Enter(this));
         }
 
         public override void OnDisconnected(EndPoint endPoint)
@@ -223,7 +224,8 @@ namespace Server
             SessionManager.Instance.Remove(this);
             if(Room != null)
             {
-                Room.Leave(this);
+                GameRoom room = Room;
+                room.Push(() => room.Leave(this));
                 Room = null;
             }
 
