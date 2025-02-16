@@ -62,6 +62,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Assets\Scripts\Server_Network\ServerCore\Connector.cs" />
+    <Compile Include="Assets\Scripts\Server_Network\PacketQueue.cs" />
     <Compile Include="Assets\Scripts\Server_Network\NetworkManager.cs" />
     <Compile Include="Assets\Scripts\Server_Network\DummyClient\ServerSession.cs" />
     <Compile Include="Assets\Scripts\Server_Network\DummyClient\Packet\강의버전\PacketFormat(강의수정버전-현재 유니티에서는 안해도 됨).cs" />

@@ -41,7 +41,7 @@ array.copy(buffer2, 0, sendbuffer, buffer.Length, buffer2.Length);_
         
         //쓰레드마다 청크를 크게 나누고 이를 쪼개서 사용한다.
         //SendBuffer도 4096에서 65535로 변경
-        public static int chunkSize { get; set; } = 65535 * 100; // 
+        public static int chunkSize { get; set; } = 65535; // 이제 유니티에서 관리하니 너무 크게 잡을필요 없다 오히려 크면 문제 생기니 *100 제거
 
         public static ArraySegment<byte> Open ( int reserveSize )
         {

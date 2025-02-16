@@ -23,7 +23,7 @@ class PacketManager
     {{
         Register();
     }}
-    Dictionary<ushort, Action<PacketSession, ArraySegment<byte>>> _onRecv = new Dictionary<ushort, Action<PacketSession, ArraySegment<byte>>>();//프로토콜ID, 행동
+    Dictionary<ushort, Func<PacketSession, ArraySegment<byte>, IPacket>> _makeFunc = new Dictionary<ushort, Func<PacketSession, ArraySegment<byte>, IPacket>>();//프로토콜ID, 행동 반환값이 있으니 이제 Action이 아닌 Func
     Dictionary<ushort, Action<PacketSession, IPacket>> _handler = new Dictionary<ushort, Action<PacketSession, IPacket>>();
 
     public void Register()
@@ -32,7 +32,7 @@ class PacketManager
 {0}
     }}
 
-    public void OnRecvPacket(PacketSession session, ArraySegment<byte> buffer)// 유효한 범위를 보내주는거
+    public void OnRecvPacket(PacketSession session, ArraySegment<byte> buffer, Action<PacketSession, IPacket> onRecvCallback = null)// 유효한 범위를 보내주는거
     {{
         //나중에는 자동화 해줄거니까 걱정하지 말자 그리고 이런 직렬화는 정말 많이 사용하니 잘 봐두자
         //이제 매니저로 이동(자동화 위해서)
@@ -59,30 +59,39 @@ class PacketManager
         //아래 코드로 변경
         //}}*/
 
-        Action<PacketSession, ArraySegment<byte>> action = null;
-        if(_onRecv.TryGetValue(id, out action))
-            action.Invoke(session, buffer);
-        //이게 실행되고 위에 딕셔너리로 등록한 핸들러에 접근되고 그 핸들러가 MakePacket 메소드를 실행한다
+        Func<PacketSession, ArraySegment<byte>, IPacket> func = null;
+        if(_makeFunc.TryGetValue(id, out func))
+        {{
+            IPacket packet =  func.Invoke(session, buffer);
+            //이게 실행되고 위에 딕셔너리로 등록한 핸들러에 접근되고 그 핸들러가 MakePacket 메소드를 실행한다
+            if (onRecvCallback != null) onRecvCallback.Invoke(session, packet);
+            else HandlePacket(session, packet);
+        }}
 
     }}
 
-    void MakePacket<T>(PacketSession session, ArraySegment<byte> buffer) where T : IPacket, new()
+    T MakePacket<T>(PacketSession session, ArraySegment<byte> buffer) where T : IPacket, new()
     {{
         /*long playerId = BitConverter.ToUInt16(buffer.Array, buffer.Offset + count);
                     count += 8;*/
         T pkt = new T();
         pkt.Read(buffer);
+        return pkt;
+    }}
 
+    // 핸들러로 보내는 부분 분리
+    public void HandlePacket(PacketSession session, IPacket packet)
+    {{
         Action<PacketSession, IPacket> action = null;
-        if(_handler.TryGetValue(pkt.Protocol, out action))
-            action.Invoke(session, pkt);
+        if (_handler.TryGetValue(packet.Protocol, out action))
+            action.Invoke(session, packet);
     }}
 }}
 ";
         // {0} 패킷 이름
         public static string mangerRegisterFormat =
 @"
-        _onRecv.Add((ushort)PacketID.{0}, MakePacket<{0}>);
+        _makeFunc.Add((ushort)PacketID.{0}, MakePacket<{0}>);
         _handler.Add((ushort)PacketID.{0}, PacketHandler.{0}Handler);";
 
         //{0} 패킷 이름/번호 목록
@@ -100,7 +109,7 @@ using System.Text;
     {0}
 }}
 
-interface IPacket
+public interface IPacket
 {{ 
 	ushort Protocol {{ get; }}
 	void Read(ArraySegment<byte> segment);

@@ -26,6 +26,7 @@ namespace ServerCore
         {
             for (int i = 0; i < count; i++)
             {
+                
                 Socket socket = new Socket(endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
                 SocketAsyncEventArgs args = new SocketAsyncEventArgs();
                 _sessionFactory = sessionFactory;

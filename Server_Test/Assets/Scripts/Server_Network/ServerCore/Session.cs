@@ -6,6 +6,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using UnityEngine;
 
 namespace ServerCore
 {
@@ -96,6 +97,11 @@ namespace ServerCore
         public abstract void OnSend(int numOfBytes);
         public abstract void OnDisconnected(EndPoint endPoint);
 
+        public bool IsConnected() // 테스트하려고 추가한 코드(강의 내용X)
+        {
+            return _socket != null && _socket.Connected && _disconnected == 0;
+        }
+
         void Clear()
         {
             lock(_lock)
@@ -162,21 +168,41 @@ namespace ServerCore
 
         public void Send(ArraySegment<byte> sendBuff)
         {
+            Debug.Log("send 락전");
             lock (_lock) //락을 잡아 한번에 한명씩만
             {
+                Debug.Log("send 락 들어옴");
+
+                if (_socket == null || !_socket.Connected)
+                {
+                    Debug.LogError("[Send] 소켓이 연결되지 않음!");
+                    return;
+                }
+
                 _sendQueue.Enqueue(sendBuff); // 큐도 변경
                 //즉 리스트를 따로 관리하고 있으니 이것도 이렇게 리스트로 확인이 가능
-                if (_Pendinglist.Count == 0 ) Registersend(); // 이대로 사용해도 무관하나 좀 더 최적화하기 위해선 해당 메소드를 건드려야한다 
+                if (_Pendinglist.Count == 0 || _sendArgs.BufferList == null)
+                {
+                    Debug.LogError($"[Send] Registersend 전 접근 완료 _Pendinglist.Count : {_Pendinglist.Count} ");
+                    Registersend(); // 이대로 사용해도 무관하나 좀 더 최적화하기 위해선 해당 메소드를 건드려야한다 
+                }
+                else
+                {
+
+                    Debug.LogError($"[Send] Registersend 전 접근 실패 실행 실패  _Pendinglist.Count : {_Pendinglist.Count} ");
+                }
 
                 //만일 이걸 이렇게 안하고 어느정도 모이면 보내게 한다면 패킷 모아보내기를 엔진에서 할 수 있다
-
+                Debug.Log("send 락 끝");
             }
+            Debug.Log("send 락 나옴");
         }
 
         public void Send(List<ArraySegment<byte>> sendBuffList)
         {
+            Debug.Log("list send 락 접근");
             if (sendBuffList.Count == 0) return; //문제 생길거 방지
-
+            Debug.Log("list send 락 내용 있음");
             lock (_lock) //락을 잡아 한번에 한명씩만
             {
                 foreach(ArraySegment<byte> sendBuff in sendBuffList)
@@ -188,12 +214,17 @@ namespace ServerCore
                 //만일 이걸 이렇게 안하고 어느정도 모이면 보내게 한다면 패킷 모아보내기를 엔진에서 할 수 있다
 
             }
+            Debug.Log("list send 락 나옴");
         }
 
         public void Disconnect()
         {
             if (Interlocked.Exchange(ref _disconnected, 1) == 1)
+            {
+                Debug.LogError("[Disconnect] 이미 세션이 끊어져 있음.");
                 return;
+            }
+            Debug.Log("[Disconnect] 세션 종료 처리.");
             OnDisconnected(_socket.RemoteEndPoint);
             _socket.Shutdown(SocketShutdown.Both);
             _socket.Close();
@@ -205,7 +236,12 @@ namespace ServerCore
         // 이대로 사용해도 무관하나 좀 더 최적화하기 위해선 해당 메소드를 건드려야한다 
         void Registersend() // 어차피 전역으로 선언되었기 때문에 매개변수로 넣어줄 필요가 없다
         {
-            if (_disconnected == 1) return;
+            Debug.Log("Registersend 접근");
+            if (_disconnected == 1)
+            {
+                Debug.Log("_disconnected로 종료");
+                return;
+            }
 
             /*_pending = true;
             byte[] buff = _sendQueue.Dequeue();
@@ -242,22 +278,32 @@ namespace ServerCore
 
             try
             {
+                Debug.Log("Try 접근");
                 bool pendig = _socket.SendAsync(_sendArgs);
-                if (!pendig) OnSendCompleted(null, _sendArgs);
+                if (!pendig)
+                {
+                    Debug.Log($"바로 끝났냉 _sendArgs : {_sendArgs} _socket.SendAsync(_sendArgs) : {_socket.SendAsync(_sendArgs)}");
+                    OnSendCompleted(null, _sendArgs);
+                }
+                else Debug.Log("처리중");
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"RegisterSend Failed : {ex}");
+                Debug.LogError($"RegisterSend Failed 전송실패 : {ex}");
             }
             
         }
 
         void OnSendCompleted(object sender, SocketAsyncEventArgs args)
         {
-            lock(_lock)// 콜백 방식으로 다른 쓰레드에서 사용할 수 있기 때문에 lock을 사용
+            Debug.Log("전송 성공");
+            lock (_lock)// 콜백 방식으로 다른 쓰레드에서 사용할 수 있기 때문에 lock을 사용
             {
+                Debug.Log("락 들감");
                 if (args.BytesTransferred > 0 && args.SocketError == SocketError.Success)
                 {
+                    Debug.Log("전송 성공");
 
                     //이제 애매한 부분 Send하는 부분이 정해져있지 않다
                     //다른 방법으로 접근해야 한다
@@ -267,12 +313,14 @@ namespace ServerCore
                         _sendArgs.BufferList = null;
                         _Pendinglist.Clear();
 
+                        Debug.Log("정상적인 전송");
                         OnSend(_sendArgs.BytesTransferred);
 
                         //이전과 같이 하면 버퍼가 2개가 되버리는 문제가 발생한다
                         //똑같은 정보를 2번 보내는 일
                         if (_sendQueue.Count > 0)
                         {
+                            Debug.Log("내용 남아서 더 보냄");
                             Registersend();
                         }
      
@@ -281,10 +329,12 @@ namespace ServerCore
                     catch (Exception ex)
                     {
                         Console.WriteLine($"OnSendCompleted Failed {ex}");
+                        Debug.Log($"OnSendCompleted Failed 에러 발생{ex}");
                     }
                 }
                 else
                 {
+                    Debug.Log($"전송 실패 - 연결 종료 args.BytesTransferred > 0 : {args.BytesTransferred}  args.SocketError : {args.SocketError}");
                     // 상대방에게 문제가 있다는거니까
                     Disconnect();
                 }
@@ -361,5 +411,6 @@ namespace ServerCore
             }
         }
     }
+
     #endregion
 }
