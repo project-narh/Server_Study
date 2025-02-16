@@ -126,7 +126,7 @@ namespace ServerCore
             //추가 정보를 주고 싶으면
             //recvArgs.UserToken = 어떤 정보든 상관 없음; 식별자나 연동하고 싶은 데이터가 있을대
             //SetBuffer로 해줘야한다 기존에 리슨때는 args.AcceptSocket = null;
-            _sendArgs.Completed += new EventHandler<SocketAsyncEventArgs>(OnRecvCompleted);
+            _sendArgs.Completed += new EventHandler<SocketAsyncEventArgs>(OnSendCompleted); // 수정
             RegisterRecv();
 
             //낚시대를 쓰고 올려서 다시 던지고하는것과 같다

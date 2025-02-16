@@ -2,7 +2,7 @@ using ServerCore;
 using System;
 using System.Collections.Generic;
 
-class PacketManager
+public class PacketManager
 {
     #region Singleton (이전 방식은 매번 실행될때 래지스터 호출해줘야 해서 그런 작업 안하게 수정)
     static PacketManager _instance = new PacketManager();
@@ -20,8 +20,17 @@ class PacketManager
     {
         //패킷을 받는도중 Register를 하면 문제 발생 (먼저 등록하고 패킷이 들어오면 문제가 안된다)
 
-        _makeFunc.Add((ushort)PacketID.S_Chat, MakePacket<S_Chat>);
-        _handler.Add((ushort)PacketID.S_Chat, PacketHandler.S_ChatHandler);
+        _makeFunc.Add((ushort)PacketID.S_BroadcastEnterGame, MakePacket<S_BroadcastEnterGame>);
+        _handler.Add((ushort)PacketID.S_BroadcastEnterGame, PacketHandler.S_BroadcastEnterGameHandler);
+
+        _makeFunc.Add((ushort)PacketID.S_BroadcastLeaveGame, MakePacket<S_BroadcastLeaveGame>);
+        _handler.Add((ushort)PacketID.S_BroadcastLeaveGame, PacketHandler.S_BroadcastLeaveGameHandler);
+
+        _makeFunc.Add((ushort)PacketID.S_PlayerList, MakePacket<S_PlayerList>);
+        _handler.Add((ushort)PacketID.S_PlayerList, PacketHandler.S_PlayerListHandler);
+
+        _makeFunc.Add((ushort)PacketID.S_BroadcastMove, MakePacket<S_BroadcastMove>);
+        _handler.Add((ushort)PacketID.S_BroadcastMove, PacketHandler.S_BroadcastMoveHandler);
 
     }
 

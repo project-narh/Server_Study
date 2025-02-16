@@ -197,11 +197,7 @@ namespace ServerCore
 
         public void Disconnect()
         {
-            if (Interlocked.Exchange(ref _disconnected, 1) == 1)
-            {
-                Debug.LogError("[Disconnect] 이미 세션이 끊어져 있음.");
-                return;
-            }
+            if (Interlocked.Exchange(ref _disconnected, 1) == 1) return;
             OnDisconnected(_socket.RemoteEndPoint);
             _socket.Shutdown(SocketShutdown.Both);
             _socket.Close();

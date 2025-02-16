@@ -1,10 +1,34 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?> 
 <PDL>
-	<Packet name="C_Chat">
-		<String name="chat"/>
-	</Packet>
-	<Packet name="S_Chat">
+	<Packet name="S_BroadcastEnterGame">
 		<int name="playerId"/>
-		<String name="chat"/>
+		<float name="posX"/>
+		<float name="posY"/>
+		<float name="posZ"/>
+	</Packet>
+	<Packet name="C_LeaveGame">
+	</Packet>
+	<Packet name="S_BroadcastLeaveGame">
+		<int name="playerId"/>
+	</Packet>
+	<Packet name="S_PlayerList">
+		<list name="player">
+			<bool name="isSelf"/>
+			<int name="playerId"/>
+			<float name="posX"/>
+			<float name="posY"/>
+			<float name="posZ"/>
+		</list>
+	</Packet>
+	<Packet name="C_Move">
+		<float name="posX"/>
+		<float name="posY"/>
+		<float name="posZ"/>
+	</Packet>
+	<Packet name="S_BroadcastMove">
+		<int name="playerId"/>
+		<float name="posX"/>
+		<float name="posY"/>
+		<float name="posZ"/>
 	</Packet>
 </PDL>

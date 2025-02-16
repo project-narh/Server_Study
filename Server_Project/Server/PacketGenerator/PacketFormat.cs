@@ -12,7 +12,7 @@ namespace PacketGenerator
 using System;
 using System.Collections.Generic;
 
-class PacketManager
+public class PacketManager
 {{
     #region Singleton (이전 방식은 매번 실행될때 래지스터 호출해줘야 해서 그런 작업 안하게 수정)
     static PacketManager _instance = new PacketManager();
@@ -129,7 +129,8 @@ public interface IPacket
 
         // 여러줄에 걸쳐서 문자열을 정의해 주고 싶을 땐 @를 붙이면 된다. 
         public static string packetFormat =
-@"class {0} : IPacket
+@"
+public class {0} : IPacket
 {{
     {1}     
 

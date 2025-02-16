@@ -26,39 +26,11 @@ namespace Server
             _jobQueue.Push(job);
         }
 
-        public void Broadcast(ClientSession session, string chat)
+        public void Broadcast(ArraySegment<byte> segment)
         {
-            S_Chat packet = new S_Chat();
-            packet.playerId = session.SessionId; // 세션은 사람이고 게임룸이 방이라고 생각하면 될거 같다
-            packet.chat = $"{chat} I am {packet.playerId}";
-            ArraySegment<byte> segment = packet.Write();
-
-            //lock을 잡고 디버그해보면 대부분의 쓰레드가 이쪽에 잡혀있다 
-            //이곳에서 밀리면 쓰레드 회수가 안되고 풀입장에서는 너무 늦어서 새로 쓰레드를 생성한다. 무식하게 직원을 100명씩 고용하는 상황
-            //잘 모르는 사람들은 락잡으면 끝이라고 생각하지만 일은 한번에 한명씩밖에 못한다 진지하게 하려면 이렇게 하면 안된다.
-            //소규모면 몰라도 대규모면 이렇게 하면 밀린다.
-            // 방법은 게임룸 작업을 한명한 하게 한다 나머지 애들은 큐에 넣고 다른일을 한다.
-
-            //MMO에서 서버가 어떻게 구성되나 중요하다.
-            //N제곱의 시간복잡도(주변 모두에게 보내기 때문에)
-            //주변에 100명 있으면 100명 모두에게 보내기 때문에 그래서 테스트 해보면 같은 숫자가 10개씩 한번에 보내짐
-            //이 보내는 공간 잡는게 힘들다...
-
-            //foreach(ClientSession s in _sessions)
-            //{
-            //    s.Send(segment);
-            //}
-
-            _pendingList.Add(segment); // 위처럼 각각 다 보내는게 아니라 보내야 할 패킷을 모은다.
-            //그러면 모은경우 누군가는 보내긴 해야 한다.
-
+            _pendingList.Add(segment);
         }
 
-
-        //클라이언트 요청만이 아닌 몬스터가 움직이거나 길찾기, 스킬 이런것들도 게임룸에 넣어야 한다
-        //실행하기 위한 마스터가 필요하다
-        //Main에서 클라이언트의 요청을 담은 Room을 Flush하는 역할을 했는데 서버도 마찬가지로 Flush해 갱신해주는 작업이 필요하다.
-        //유저들이 보낸 패킷 뿐만 아니라 AI등의 작업도 잡큐 _pendingList에 넣어야 한다.
         public void Flush()
         {
             foreach (ClientSession s in _sessions)
@@ -71,13 +43,59 @@ namespace Server
 
         public void Enter(ClientSession session) // 동시다발적으로 실행된다는걸 가정하고 해야한다
         {
+            //플레이어 추가
             _sessions.Add(session);
             session.Room = this;
+
+            //신입생한테 모든 플레이어 목록 전송
+            S_PlayerList players = new S_PlayerList();
+            foreach(ClientSession s in _sessions)
+            {
+                players.players.Add(new S_PlayerList.Player()
+                {
+                    isSelf = (s == session),
+                    playerId = s.SessionId,
+                    posX = s.PosX,
+                    posY = s.PosY,
+                    posZ = s.PosZ
+                });
+            }
+            session.Send(players.Write());
+
+            //신입생 입장을 모두에게 알린다
+            S_BroadcastEnterGame enter = new S_BroadcastEnterGame();
+            enter.playerId = session.SessionId;
+            enter.posX = 0;
+            enter.posY = 0;
+            enter.posZ = 0;
+            Broadcast(enter.Write());
         }
 
         public void Leave(ClientSession session)
         {
+            // 플레이어 제거
             _sessions.Remove(session);  
+
+            // 모두에게 알린다
+            S_BroadcastLeaveGame leave = new S_BroadcastLeaveGame();
+            leave.playerId = session.SessionId;
+            Broadcast(leave.Write());
+        }
+
+        public void Move(ClientSession session, C_Move packet)
+        {
+            //좌표를 바꿔주고
+            session.PosX = packet.posX;
+            session.PosY = packet.posY;
+            session.PosZ = packet.posZ;
+
+            //모두에게 알린다
+            S_BroadcastMove move = new S_BroadcastMove();
+            move.playerId = session.SessionId;
+            move.posX = session.PosX;
+            move.posY = session.PosY;
+            move.posZ = session.PosZ;
+
         }
     }
 }
