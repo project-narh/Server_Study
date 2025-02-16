@@ -31,7 +31,7 @@ namespace DummyClient
         public override void OnSend(int numOfBytes)
         {
             //Console.WriteLine($"Transferred byte {numOfBytes}");
-            Debug.Log("보내는데 성공");
+            
         }
     }
 }

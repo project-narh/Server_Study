@@ -67,11 +67,14 @@
     <Compile Include="Assets\Scripts\Server_Network\DummyClient\ServerSession.cs" />
     <Compile Include="Assets\Scripts\Server_Network\DummyClient\Packet\강의버전\PacketFormat(강의수정버전-현재 유니티에서는 안해도 됨).cs" />
     <Compile Include="Assets\Scripts\Server_Network\DummyClient\Packet\PacketHandler.cs" />
+    <Compile Include="Assets\Scripts\PlayerManager.cs" />
     <Compile Include="Assets\Scripts\Server_Network\ServerCore\SendBuffer.cs" />
     <Compile Include="Assets\Scripts\Server_Network\DummyClient\Packet\ClientPacketManager.cs" />
+    <Compile Include="Assets\Scripts\Player.cs" />
     <Compile Include="Assets\Scripts\Server_Network\ServerCore\Session.cs" />
     <Compile Include="Assets\Scripts\Server_Network\DummyClient\Packet\GenPackets.cs" />
     <Compile Include="Assets\TutorialInfo\Scripts\Readme.cs" />
+    <Compile Include="Assets\Scripts\MyPlayer.cs" />
     <Compile Include="Assets\Scripts\Server_Network\DummyClient\Packet\강의버전\GenPackets(강의에서 안된부분 수정된 GenPackts - 현재 유니티에서는 지원해서 유지).cs" />
     <Compile Include="Assets\Scripts\Server_Network\ServerCore\RecvBuffer(16).cs" />
   </ItemGroup>

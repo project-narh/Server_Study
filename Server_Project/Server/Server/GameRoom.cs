@@ -95,7 +95,7 @@ namespace Server
             move.posX = session.PosX;
             move.posY = session.PosY;
             move.posZ = session.PosZ;
-
+            Broadcast(move.Write());
         }
     }
 }

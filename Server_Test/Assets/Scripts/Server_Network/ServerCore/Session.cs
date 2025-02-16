@@ -117,8 +117,8 @@ namespace ServerCore
             _recvArgs.Completed += new EventHandler<SocketAsyncEventArgs>(OnRecvCompleted);
             //이제 이 위치에서 하는게 아니다
             //recvArgs.SetBuffer(new byte[1024], 0, 1024);
-           
-            
+
+
             //버퍼의 offset은 0이고 크기는 1024까지 가능한 버퍼
             //TCP는 100를 보낸다고 전부 100으로 온다는 보장이 없다.
             //그러면 넘어온 바이트를 파악하고 전부다 안오면 리시브 곱하기 보간만 하고 있다가 추가로 오면
@@ -132,7 +132,8 @@ namespace ServerCore
             //추가 정보를 주고 싶으면
             //recvArgs.UserToken = 어떤 정보든 상관 없음; 식별자나 연동하고 싶은 데이터가 있을대
             //SetBuffer로 해줘야한다 기존에 리슨때는 args.AcceptSocket = null;
-            _sendArgs.Completed += new EventHandler<SocketAsyncEventArgs>(OnRecvCompleted);
+            _sendArgs.Completed += new EventHandler<SocketAsyncEventArgs>(OnSendCompleted); // 잘못된 값 들어가 있어서 문제 발생되었음
+            //이거때문에 패킷 안보내지는 문제
             RegisterRecv();
 
             //낚시대를 쓰고 올려서 다시 던지고하는것과 같다
