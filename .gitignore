@@ -70,3 +70,17 @@ crashlytics-build.properties
 # Temporary auto-generated Android Assets
 /[Aa]ssets/[Ss]treamingAssets/aa.meta
 /[Aa]ssets/[Ss]treamingAssets/aa/*
+
+# 빌드시 생성되는 불필요한 파일들
+/[Bb]in/
+/[Dd]oc/
+/[Tt]est[Rr]esults/
+Server_Test/Library/
+Server_Test/Temp/
+Server_Test/Obj/
+Server_Test/Build/
+Server_Test/Logs/
+Server_Test/UserSettings/
+Server_Test/Packages/
+Server_Test/MemoryCaptures/
+Server_Test/Recordings/
